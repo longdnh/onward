@@ -5,6 +5,7 @@ public final class ApiErrorCodes {
 
     public static final String INVALID_REQUEST = "INVALID_REQUEST";
     public static final String EMAIL_ALREADY_EXISTS = "EMAIL_ALREADY_EXISTS";
+    public static final String MEMBERSHIP_ALREADY_ACTIVE = "MEMBERSHIP_ALREADY_ACTIVE";
     public static final String INTERNAL_ERROR = "INTERNAL_ERROR";
     public static final String NOT_FOUND = "NOT_FOUND";
     public static final String METHOD_NOT_ALLOWED = "METHOD_NOT_ALLOWED";

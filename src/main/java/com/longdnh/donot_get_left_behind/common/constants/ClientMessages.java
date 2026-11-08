@@ -7,6 +7,8 @@ public final class ClientMessages {
     public static final String EMAIL_TOO_LONG = "email must not exceed %d characters";
     public static final String EMAIL_INVALID = "email must be a valid email address";
     public static final String EMAIL_ALREADY_EXISTS = "An account with this email already exists";
+    public static final String MEMBERSHIP_ALREADY_ACTIVE = "The user is already an active member of this organization";
+    public static final String ROLE_NOT_ASSIGNABLE = "Only ADMIN or MEMBER can be assigned when adding a member";
 
     public static final String PASSWORD_REQUIRED = "password is required";
     public static final String PASSWORD_LENGTH_OUT_OF_RANGE = "password must contain between %d and %d characters";

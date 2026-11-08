@@ -16,6 +16,13 @@ public interface OrganizationRepository {
     /** Must be called inside the caller's transaction. */
     Optional<Organization> findById(UUID organizationId);
 
+    /**
+     * Loads the organization with a row lock (SELECT ... FOR UPDATE) held until the caller's
+     * transaction ends. Every membership mutation of one organization goes through this lock,
+     * so their checks and writes are serialized per tenant. Must be called inside the caller's transaction.
+     */
+    Optional<Organization> findByIdForUpdate(UUID organizationId);
+
     /** Writes the new state of an existing organization. Must be called inside the caller's transaction. */
     Organization update(Organization organization);
 

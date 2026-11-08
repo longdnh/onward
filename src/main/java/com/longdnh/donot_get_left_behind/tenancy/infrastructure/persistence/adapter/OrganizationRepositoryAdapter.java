@@ -18,6 +18,7 @@ import com.longdnh.donot_get_left_behind.tenancy.domain.Organization;
 import com.longdnh.donot_get_left_behind.tenancy.infrastructure.persistence.entities.OrganizationEntity;
 
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
 import jakarta.persistence.Tuple;
 
 @Repository
@@ -35,6 +36,14 @@ public class OrganizationRepositoryAdapter implements OrganizationRepository {
         OrganizationEntity entity = OrganizationEntity.fromDomain(organization);
         entityManager.persist(entity);
         return entity.toDomain();
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public Optional<Organization> findByIdForUpdate(UUID organizationId) {
+        return Optional.ofNullable(
+                        entityManager.find(OrganizationEntity.class, organizationId, LockModeType.PESSIMISTIC_WRITE))
+                .map(OrganizationEntity::toDomain);
     }
 
     @Override
