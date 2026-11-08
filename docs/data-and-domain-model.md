@@ -55,12 +55,13 @@ The diagram expresses database relationships. The service must create an organiz
 
 ### User — global identity
 
-`identity.domain.User` contains `id`, `email`, `passwordHash`, `UserStatus`, `createdAt`, and `updatedAt`.
+`identity.domain.User` contains `id`, `email`, `passwordHash`, `UserStatus`, an optional `SystemRole`, `createdAt`, and `updatedAt`.
 
 - `User.create(id, email, passwordHash, now)` creates an active account.
 - Email is stripped and lowercased using `Locale.ROOT`, preserving dots and `+` suffixes. The canonical value is limited to 254 Unicode code points.
 - The password argument is already encoded. Hashing and email-format validation occur before model creation.
-- `isActive()` distinguishes `ACTIVE` from `DISABLED`.
+- `isActive()` distinguishes `ACTIVE` from `DISABLED`; `disable` and `enable` return the new state.
+- `SystemRole` (`ADMIN` or none, column `system_role` from migration V5) is a system-wide role, not a tenant role; `promoteToSystemAdmin` grants it. The application service decides who may call these transitions.
 - Organization roles and membership lists are not part of this identity model.
 
 ### AuthSession — one login
@@ -227,8 +228,9 @@ The following cannot be guaranteed by a single domain object or ordinary row che
 3. An admin can add/remove ordinary members but cannot manage the owner or other admins.
 4. An organization has exactly one active owner. The database enforces "at most one" through a partial unique index; the application guarantees "at least one" by creating the owner with the organization and by replacing the owner only through an ownership transfer that demotes the current owner and promotes the target in the same transaction.
 5. Creating an organization also creates its first owner atomically.
+6. An account that owns an organization cannot be disabled; disabling revokes sessions and removes the user's other memberships in the same transaction.
 
-PostgreSQL check constraints cannot safely enforce conditions depending on other rows, and "at least one" cannot be expressed as a unique index either. Every membership mutation therefore runs in a transaction that locks the organization row first and reloads the actor and target after the lock before writing. Because the partial unique index is checked per statement, an ownership transfer writes the demotion before the promotion, and the persistence adapter flushes each membership write immediately so statement order matches call order. A disabled owner account leaves the organization without a transferable owner; this is an accepted limitation of the learning project. [PostgreSQL constraint rules](https://www.postgresql.org/docs/18/ddl-constraints.html)
+PostgreSQL check constraints cannot safely enforce conditions depending on other rows, and "at least one" cannot be expressed as a unique index either. Every membership mutation therefore runs in a transaction that locks the organization row first and reloads the actor and target after the lock before writing. Because the partial unique index is checked per statement, an ownership transfer writes the demotion before the promotion, and the persistence adapter flushes each membership write immediately so statement order matches call order. Across modules the lock order is user row first (FOR UPDATE when disabling, FOR SHARE when adding a member or transferring ownership), then organization row; disable's membership clean-up locks organizations in id order. A disabled owner can therefore only arise from outside the application; that remaining case is an accepted limitation of the learning project. [PostgreSQL constraint rules](https://www.postgresql.org/docs/18/ddl-constraints.html)
 
 Every tenant query must include the requested organization ID, including lookups by membership ID and list/count queries. Foreign keys and UUIDs do not authorize a request. Row-level security is not configured by this migration.
 

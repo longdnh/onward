@@ -140,6 +140,24 @@ Serialize membership mutations by locking the organization row in a transaction 
 
 Accepted limitation: with a single owner, a lost or disabled owner account leaves the organization without anyone able to transfer ownership. A production system would need an out-of-band support operation; this learning project does not. There is no organization-deletion or global account-management API in this version.
 
+### System administrators and account lifecycle
+
+A **system role** is a property of the user record (`users.system_role`, migration V5), unrelated to tenant roles on memberships. The only value is `ADMIN`. It is read from the database on every authenticated request and exposed to Spring Security as the authority `ROLE_SYSTEM_ADMIN`, so granting or revoking it takes effect on the next request without a new login. Routes under `/api/admin/**` require that authority in the security filter chain: unlike tenant roles, a system role does not depend on the route, so the filter chain has all the information it needs.
+
+The first administrator is not seeded by a migration and not inserted by hand. At startup, if no administrator exists and `app.bootstrap.system-admin-email` names an already registered user, that user is promoted (idempotent; nothing happens on later starts). Further administrators are promoted through the admin API.
+
+Disabling an account, whether by the user (with their password) or by an administrator:
+
+- is refused with `409 OWNERSHIP_MUST_BE_TRANSFERRED` while the user owns any organization, so the system never produces an organization without an owner by itself;
+- marks the user `DISABLED`, revokes all of their sessions, and removes their remaining memberships (`ADMIN` or `MEMBER`) in every organization;
+- is idempotent; an administrator cannot disable their own account through the admin API (`409 SELF_ACTION_NOT_ALLOWED`).
+
+Re-enabling restores login only. Removed memberships stay removed; rejoining an organization is a decision of that organization's owner or admins.
+
+Identity learns about ownership through a port it owns (`OrganizationOwnershipCheck`) and informs tenancy through a `UserDisabledEvent` published inside the same transaction; the tenancy listener removes the memberships before that transaction commits, so both modules change together or not at all. An outbox would only be needed if the consumer left this process.
+
+**Lock order.** Account disable locks the user row for update. Add-member and ownership transfer lock the target user row for share *before* locking the organization row, and the disable's membership clean-up locks organizations in id order after the user. Every path therefore acquires locks in the order user → organization, which rules out deadlocks, and a transfer that races a disable either completes first (the disable then fails with `409`) or waits and then fails because the user is no longer active (`404`). A disabled user can never end up as an owner.
+
 ## 6. Tenant isolation
 
 Use routes such as `/api/organizations/{organizationId}/memberships`. The route selects the requested tenant; it is untrusted input, not proof of access.
@@ -171,6 +189,11 @@ All endpoints below are implemented. Only `GET /api/auth/csrf` and the `POST` en
 | `POST /api/auth/refresh` | Valid refresh cookie, with CSRF | `200 {accessToken, tokenType, expiresIn}` and replacement refresh cookie |
 | `GET /api/auth/me` | Authenticated | `200 {userId, email}` |
 | `POST /api/auth/logout` | Public, with CSRF | Invalidate current session if present → `204` |
+| `POST /api/auth/account/disable` | Authenticated | `{password}` → `204`; `401` on wrong password, `409` while owning an organization |
+| `GET /api/admin/users/{userId}` | System admin | `200 {id, email, status, systemRole}` |
+| `POST /api/admin/users/{userId}/disable` | System admin | → `200` user; `409` if the target owns an organization or is the caller |
+| `POST /api/admin/users/{userId}/enable` | System admin | → `200` user |
+| `POST /api/admin/users/{userId}/promote` | System admin | Grant the system `ADMIN` role → `200` user |
 | `POST /api/organizations` | Authenticated | `{name}` → `201` organization and owner membership |
 | `GET /api/organizations` | Authenticated | `200` caller's active organizations and roles |
 | `GET /api/organizations/{orgId}` | Any active member | `200` profile |
@@ -222,6 +245,11 @@ Use organizations A and B. Alice owns A and is a member of B; Bob is an admin of
 | A second active owner is inserted directly in the database | Rejected by the partial unique index |
 | Concurrent ownership transfer and admin removal of the same member | Exactly one succeeds; the organization keeps exactly one active owner |
 | Concurrent promotion to `ADMIN` and admin removal of the same member | Serialized checks: the promotion wins and the removal returns `403`, or the removal wins and the promotion returns `409` |
+| Non-admin calls `/api/admin/**` | `403`; without a token `401` |
+| Administrator disables an organization owner | `409`; the owner must transfer ownership first |
+| Administrator disables an admin or member of an organization | User `DISABLED`, sessions revoked, memberships `REMOVED`; old tokens and new logins return `401` |
+| Promote a user to system admin | Their next request already carries the admin authority |
+| Concurrent ownership transfer to a user and disable of that user | Exactly one succeeds; no disabled user is ever an active owner; no deadlock |
 
 Use policy unit tests, Spring Security integration tests for JWTs/CSRF, and PostgreSQL integration tests for scoping, constraints, and concurrency. The scenarios above have been exercised manually against a local PostgreSQL, including the concurrent ones (20 rounds each); automated coverage is the next step.
 
@@ -231,6 +259,7 @@ Use policy unit tests, Spring Security integration tests for JWTs/CSRF, and Post
 2. Completed: session/refresh-token persistence, login with throttling, JWT/session validation and `/auth/me`, refresh rotation, and logout. See the [implementation guide](authentication-implementation.md).
 3. Completed: organization creation, listing, profile, and rename.
 4. Completed: the role matrix, member management, and the single-owner model with ownership transfer (migration V4).
-5. Next: automated authentication, tenant-isolation, permission, and concurrency tests for the scenarios above.
+5. Completed: system administrators with startup bootstrap, account disable/enable, and the user → organization lock order (migration V5).
+6. Deferred: automated tests for the scenarios above.
 
 The first version is complete when a user can log in, belong to multiple organizations with different roles, and access only the operations and tenant data permitted by current memberships.
