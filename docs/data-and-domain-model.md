@@ -55,12 +55,13 @@ The diagram expresses database relationships. The service must create an organiz
 
 ### User — global identity
 
-`identity.domain.User` contains `id`, `email`, `passwordHash`, `UserStatus`, `createdAt`, and `updatedAt`.
+`identity.domain.User` contains `id`, `email`, `passwordHash`, `UserStatus`, an optional `SystemRole`, `createdAt`, and `updatedAt`.
 
 - `User.create(id, email, passwordHash, now)` creates an active account.
 - Email is stripped and lowercased using `Locale.ROOT`, preserving dots and `+` suffixes. The canonical value is limited to 254 Unicode code points.
 - The password argument is already encoded. Hashing and email-format validation occur before model creation.
-- `isActive()` distinguishes `ACTIVE` from `DISABLED`.
+- `isActive()` distinguishes `ACTIVE` from `DISABLED`; `disable` and `enable` return the new state.
+- `SystemRole` (`ADMIN` or none, column `system_role` from migration V5) is a system-wide role, not a tenant role; `promoteToSystemAdmin` grants it. The application service decides who may call these transitions.
 - Organization roles and membership lists are not part of this identity model.
 
 ### AuthSession — one login
@@ -119,7 +120,7 @@ Roles are `OWNER`, `ADMIN`, and `MEMBER`. Status is `ACTIVE` or `REMOVED`.
 
 Every transition preserves membership ID, organization ID, user ID, and creation time. Changes cannot move `updatedAt` backward. Rejoining updates the existing membership instead of inserting another row for the same user/organization pair.
 
-These operations enforce local state rules. They do not establish the caller's permission: an application service must check tenant membership, the role matrix, target role restrictions, and the last-owner rule before invoking them.
+These operations enforce local state rules. They do not establish the caller's permission: an application service must check tenant membership, the role matrix, target role restrictions, and the single-owner rule (the owner's membership changes only through an ownership transfer) before invoking them.
 
 All domain entities compare equality by ID. Comparing two objects with `equals` does not compare their current state. Their state transitions return immutable snapshots that the application must persist.
 
@@ -139,7 +140,7 @@ The email and name limits are application policies enforced after normalization 
 
 Foreign keys use `ON DELETE RESTRICT`. Removing a membership changes its status, preserving the relationship row. The unique pair applies to active and removed memberships alike.
 
-The unique organization/user index supports membership lookup within a tenant. An additional index starts with `user_id` for listing a user's organizations. A partial index covers active owner memberships; the owner check must also join the user's active status.
+The unique organization/user index supports membership lookup within a tenant. An additional index starts with `user_id` for listing a user's organizations. A partial unique index on `organization_id` over active owner memberships (migration V4) guarantees at most one active owner per organization; the ownership transfer additionally checks that the receiving user's account is active.
 
 ### IDs and timestamps
 
@@ -224,11 +225,12 @@ The following cannot be guaranteed by a single domain object or ordinary row che
 
 1. The caller is allowed to access the requested organization.
 2. A target user is active before membership creation/reactivation.
-3. An admin can add/remove ordinary members but cannot manage owners or other admins.
-4. An organization always retains an active owner whose global user is also active.
+3. An admin can add/remove ordinary members but cannot manage the owner or other admins.
+4. An organization has exactly one active owner. The database enforces "at most one" through a partial unique index; the application guarantees "at least one" by creating the owner with the organization and by replacing the owner only through an ownership transfer that demotes the current owner and promotes the target in the same transaction.
 5. Creating an organization also creates its first owner atomically.
+6. An account that owns an organization cannot be disabled; disabling revokes sessions and removes the user's other memberships in the same transaction.
 
-PostgreSQL check constraints cannot safely enforce conditions depending on other rows. The last-owner rule needs a transaction that locks the organization row, reloads the actor and target, and checks active owners before writing. All membership mutations must follow that lock protocol. A future global account-disable operation must use compatible locks across affected organizations. [PostgreSQL constraint rules](https://www.postgresql.org/docs/18/ddl-constraints.html)
+PostgreSQL check constraints cannot safely enforce conditions depending on other rows, and "at least one" cannot be expressed as a unique index either. Every membership mutation therefore runs in a transaction that locks the organization row first and reloads the actor and target after the lock before writing. Because the partial unique index is checked per statement, an ownership transfer writes the demotion before the promotion, and the persistence adapter flushes each membership write immediately so statement order matches call order. Across modules the lock order is user row first (FOR UPDATE when disabling, FOR SHARE when adding a member or transferring ownership), then organization row; disable's membership clean-up locks organizations in id order. A disabled owner can therefore only arise from outside the application; that remaining case is an accepted limitation of the learning project. [PostgreSQL constraint rules](https://www.postgresql.org/docs/18/ddl-constraints.html)
 
 Every tenant query must include the requested organization ID, including lookups by membership ID and list/count queries. Foreign keys and UUIDs do not authorize a request. Row-level security is not configured by this migration.
 

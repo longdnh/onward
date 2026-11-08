@@ -110,6 +110,8 @@ Auth responses use `Cache-Control: no-store`. Start with same-origin browser acc
 
 Every permission below requires an active user and active membership in the requested organization.
 
+Each organization has exactly one active `OWNER` (single-owner model). The database enforces "at most one" with a partial unique index on active owner memberships (migration V4). The application keeps "at least one" by creating the owner together with the organization and by changing who the owner is only through an ownership transfer.
+
 | Action | OWNER | ADMIN | MEMBER |
 | --- | --- | --- | --- |
 | Read organization profile | Yes | Yes | Yes |
@@ -118,25 +120,43 @@ Every permission below requires an active user and active membership in the requ
 | List organization memberships | Yes | Yes | No |
 | Add a registered user as `MEMBER` | Yes | Yes | No |
 | Add a registered user as `ADMIN` | Yes | No | No |
-| Change an existing membership's role | Yes | No | No |
+| Change a membership's role between `ADMIN` and `MEMBER` | Yes | No | No |
 | Remove a `MEMBER` | Yes | Yes | No |
-| Remove an `ADMIN` or `OWNER` | Yes, subject to last-owner rule | No | No |
+| Remove an `ADMIN` | Yes | No | No |
+| Transfer ownership to an active member | Yes | No | No |
 
-Any active authenticated user can create an organization and list their own organizations. An admin cannot promote themselves, create another admin, change roles, or remove owners. No role grants access to all tenants or control over another user's global account.
+Any active authenticated user can create an organization and list their own organizations. An admin cannot promote themselves, create another admin, change roles, or remove admins. No role grants access to all tenants or control over another user's global account. The owner's own membership is never demoted or removed, not even by the owner; ownership moves only through a transfer.
 
 - **Create organization:** create the organization and the caller's owner membership in one transaction. Derive the owner from authentication.
-- **Add member:** accept `{userId, role}` for an existing active user. Apply the role matrix before creating or reactivating membership. An already-active membership returns `409`; adding cannot silently change its role.
-- **Promote owner:** member creation accepts only `ADMIN` or `MEMBER`. An existing owner can promote a membership to `OWNER` through the role-change endpoint.
-- **Remove member:** mark it `REMOVED`. Subsequent requests lose access to this organization; login and other memberships remain valid.
-- **Change role:** subsequent requests use the current role, even with a preexisting session.
+- **Add member:** accept `{userId, role}` for an existing active user; `role` is `ADMIN` or `MEMBER`, never `OWNER`. Apply the role matrix before creating or reactivating membership. An already-active membership returns `409 MEMBERSHIP_ALREADY_ACTIVE`; adding cannot silently change its role. A removed membership is reactivated with the newly assigned role, keeping its ID.
+- **Change role:** `ADMIN` to `MEMBER` or back. `OWNER` as the new role returns `400`. Targeting the owner's membership returns `409 OWNER_PROTECTED`; targeting a removed membership returns `409 MEMBERSHIP_NOT_ACTIVE`. Setting the role the membership already has is a no-op `200`.
+- **Remove member:** mark it `REMOVED`. Subsequent requests lose access to this organization; login and other memberships remain valid. Removing an already removed membership is an idempotent `204`. Targeting the owner returns `409 OWNER_PROTECTED`.
+- **Transfer ownership:** the owner names an active membership of the same organization whose user account is active. In one transaction the current owner becomes `ADMIN` first and the target becomes `OWNER` second, so the unique index holds after every statement. Transferring to oneself is a no-op `200`.
+- Subsequent requests use the current role, even with a preexisting session.
 
 For local learning, the new user obtains their ID from `/api/auth/me` and shares it with an owner or admin. Knowing an ID does not authorize member creation. No global user-directory endpoint is needed. Invitation acceptance can replace direct assignment later.
 
-Every organization must retain at least one active owner whose user account is active. An owner may demote or remove themselves only when another active owner remains; otherwise return `409 LAST_OWNER_REQUIRED`.
+Serialize membership mutations by locking the organization row in a transaction and performing every check after the lock: the actor's role, the target's current role and status, and the receiving account's status. This prevents, for example, an admin removing a member who received ownership while that request was waiting. Membership writes are flushed immediately so statements reach the database in call order.
 
-Serialize membership mutations by locking the organization row in a transaction. After acquiring the lock, recheck the actor's role, target, and owner count. This also prevents an admin from removing someone who became an owner while that request was waiting.
+Accepted limitation: with a single owner, a lost or disabled owner account leaves the organization without anyone able to transfer ownership. A production system would need an out-of-band support operation; this learning project does not. There is no organization-deletion or global account-management API in this version.
 
-There is no organization-deletion or global account-management API in this version. A later account-disabling operation must also preserve ownership across the user's organizations.
+### System administrators and account lifecycle
+
+A **system role** is a property of the user record (`users.system_role`, migration V5), unrelated to tenant roles on memberships. The only value is `ADMIN`. It is read from the database on every authenticated request and exposed to Spring Security as the authority `ROLE_SYSTEM_ADMIN`, so granting or revoking it takes effect on the next request without a new login. Routes under `/api/admin/**` require that authority in the security filter chain: unlike tenant roles, a system role does not depend on the route, so the filter chain has all the information it needs.
+
+The first administrator is not seeded by a migration and not inserted by hand. At startup, if no administrator exists and `app.bootstrap.system-admin-email` names an already registered user, that user is promoted (idempotent; nothing happens on later starts). Further administrators are promoted through the admin API.
+
+Disabling an account, whether by the user (with their password) or by an administrator:
+
+- is refused with `409 OWNERSHIP_MUST_BE_TRANSFERRED` while the user owns any organization, so the system never produces an organization without an owner by itself;
+- marks the user `DISABLED`, revokes all of their sessions, and removes their remaining memberships (`ADMIN` or `MEMBER`) in every organization;
+- is idempotent; an administrator cannot disable their own account through the admin API (`409 SELF_ACTION_NOT_ALLOWED`).
+
+Re-enabling restores login only. Removed memberships stay removed; rejoining an organization is a decision of that organization's owner or admins.
+
+Identity learns about ownership through a port it owns (`OrganizationOwnershipCheck`) and informs tenancy through a `UserDisabledEvent` published inside the same transaction; the tenancy listener removes the memberships before that transaction commits, so both modules change together or not at all. An outbox would only be needed if the consumer left this process.
+
+**Lock order.** Account disable locks the user row for update. Add-member and ownership transfer lock the target user row for share *before* locking the organization row, and the disable's membership clean-up locks organizations in id order after the user. Every path therefore acquires locks in the order user → organization, which rules out deadlocks, and a transfer that races a disable either completes first (the disable then fails with `409`) or waits and then fails because the user is no longer active (`404`). A disabled user can never end up as an owner.
 
 ## 6. Tenant isolation
 
@@ -159,7 +179,7 @@ Keep permission checks in an `OrganizationAccessService` or `AuthorizationPolicy
 
 ## 7. API contracts
 
-The CSRF and registration endpoints are implemented. All other endpoints below are planned. Only `GET /api/auth/csrf` and `POST /api/auth/register` currently allow anonymous requests. Other routes require authentication, which will be implemented in the login/JWT step. Public unsafe methods still require CSRF. Roles below always mean roles in the requested organization.
+All endpoints below are implemented. Only `GET /api/auth/csrf` and the `POST` endpoints `register`, `login`, `refresh`, and `logout` allow anonymous requests; every other route requires a Bearer access token. Public unsafe methods require CSRF. Requests carrying a Bearer token are exempt from CSRF (Spring Security's resource-server default), so a request without a token to a protected unsafe endpoint is rejected by CSRF first and returns `403` rather than `401`. Roles below always mean roles in the requested organization.
 
 | Method and path | Access | Input / success result |
 | --- | --- | --- |
@@ -169,6 +189,11 @@ The CSRF and registration endpoints are implemented. All other endpoints below a
 | `POST /api/auth/refresh` | Valid refresh cookie, with CSRF | `200 {accessToken, tokenType, expiresIn}` and replacement refresh cookie |
 | `GET /api/auth/me` | Authenticated | `200 {userId, email}` |
 | `POST /api/auth/logout` | Public, with CSRF | Invalidate current session if present → `204` |
+| `POST /api/auth/account/disable` | Authenticated | `{password}` → `204`; `401` on wrong password, `409` while owning an organization |
+| `GET /api/admin/users/{userId}` | System admin | `200 {id, email, status, systemRole}` |
+| `POST /api/admin/users/{userId}/disable` | System admin | → `200` user; `409` if the target owns an organization or is the caller |
+| `POST /api/admin/users/{userId}/enable` | System admin | → `200` user |
+| `POST /api/admin/users/{userId}/promote` | System admin | Grant the system `ADMIN` role → `200` user |
 | `POST /api/organizations` | Authenticated | `{name}` → `201` organization and owner membership |
 | `GET /api/organizations` | Authenticated | `200` caller's active organizations and roles |
 | `GET /api/organizations/{orgId}` | Any active member | `200` profile |
@@ -176,8 +201,9 @@ The CSRF and registration endpoints are implemented. All other endpoints below a
 | `GET /api/organizations/{orgId}/memberships/me` | Any active member | `200` own membership |
 | `GET /api/organizations/{orgId}/memberships` | Owner or admin | `200` membership list |
 | `POST /api/organizations/{orgId}/memberships` | Owner or admin, role restrictions apply | `{userId, role}` → `201` created or reactivated membership |
-| `PATCH /api/organizations/{orgId}/memberships/{id}/role` | Owner | `{role}` → `200` membership |
-| `DELETE /api/organizations/{orgId}/memberships/{id}` | Owner, or admin removing a member | Mark removed → `204` |
+| `PATCH /api/organizations/{orgId}/memberships/{id}/role` | Owner | `{role}` (`ADMIN` or `MEMBER`) → `200` membership |
+| `DELETE /api/organizations/{orgId}/memberships/{id}` | Owner, or admin removing a member | Mark removed → `204`; idempotent |
+| `POST /api/organizations/{orgId}/memberships/ownership-transfer` | Owner | `{membershipId}` → `200 {newOwner, previousOwner}` |
 
 Membership responses contain `id`, `organizationId`, `userId`, `role`, and `status`. Lists are paginated: page 0 and size 20 by default, maximum size 100, stable ordering. Never return password hashes or session details. Member lists omit email addresses and memberships in other tenants.
 
@@ -187,7 +213,7 @@ Membership responses contain `id`, `organizationId`, `userId`, `role`, and `stat
 | `401` | Invalid credentials or missing/expired authentication |
 | `403` | Tenant member lacks permission; also missing/invalid CSRF |
 | `404` | Organization inaccessible, resource outside requested tenant, or target user unavailable for member creation |
-| `409` | Duplicate registration, already-active membership, or last-owner conflict |
+| `409` | Duplicate registration, already-active membership, owner's membership targeted by a role change or removal, or removed membership targeted by a role change or transfer |
 | `429` | Throttled request, with `Retry-After` |
 
 Use consistent `{code, message}` errors. Nonmembers receive the same `404` whether an organization exists or not. After establishing membership, check operation permission before mutation and scope target lookup to that organization. Missing authentication normally returns `401`, but a CSRF rejection can occur first and return `403`.
@@ -209,22 +235,31 @@ Use organizations A and B. Alice owns A and is a member of B; Bob is an admin of
 | Eve requests A | `404`; no tenant information leaked |
 | Use B membership ID in A route | `404`; no read or change |
 | Bob adds or removes an ordinary member | Allowed |
-| Bob adds an admin, changes a role, or removes an owner | `403` |
+| Bob adds an admin, changes a role, or removes an admin | `403` |
+| Anyone, including Alice, demotes or removes the owner | `409`; ownership changes only through a transfer |
 | Register with a supplied role or tenant ID | `400`; no privilege granted |
 | List organizations or memberships | Only permitted data and counts appear |
 | Demote or remove a member with an existing session | Next request reflects current membership |
-| Remove or demote the last owner | `409`; an active owner remains |
-| Two owners concurrently remove each other | At least one active owner remains |
-| Concurrent member promotion and admin removal | Serialized checks prevent admin removal of an owner |
+| Alice transfers ownership to Carol | Carol becomes `OWNER` and Alice becomes `ADMIN` in one transaction; Alice can no longer transfer |
+| Transfer to a removed membership or a disabled account | `409` or `404`; the owner is unchanged |
+| A second active owner is inserted directly in the database | Rejected by the partial unique index |
+| Concurrent ownership transfer and admin removal of the same member | Exactly one succeeds; the organization keeps exactly one active owner |
+| Concurrent promotion to `ADMIN` and admin removal of the same member | Serialized checks: the promotion wins and the removal returns `403`, or the removal wins and the promotion returns `409` |
+| Non-admin calls `/api/admin/**` | `403`; without a token `401` |
+| Administrator disables an organization owner | `409`; the owner must transfer ownership first |
+| Administrator disables an admin or member of an organization | User `DISABLED`, sessions revoked, memberships `REMOVED`; old tokens and new logins return `401` |
+| Promote a user to system admin | Their next request already carries the admin authority |
+| Concurrent ownership transfer to a user and disable of that user | Exactly one succeeds; no disabled user is ever an active owner; no deadlock |
 
-Use policy unit tests, Spring Security integration tests for JWTs/CSRF, and PostgreSQL integration tests for scoping, constraints, and concurrency. These are planned acceptance criteria, not existing coverage. New automated tests remain deferred at the user's request.
+Use policy unit tests, Spring Security integration tests for JWTs/CSRF, and PostgreSQL integration tests for scoping, constraints, and concurrency. The scenarios above have been exercised manually against a local PostgreSQL, including the concurrent ones (20 rounds each); automated coverage is the next step.
 
 ## 9. Implementation order
 
 1. Completed: the three initial tables, registration service and HTTP API, password hashing, CSRF endpoint, and registration throttling.
-2. Next: validated authentication configuration and session/refresh-token persistence; then token generation, login with throttling, JWT/session validation and `/auth/me`, refresh rotation, and logout. Follow the [implementation guide](authentication-implementation.md).
-3. Implement organization creation and membership-aware listing.
-4. Implement the role matrix, member management, and last-owner checks.
-5. Run the authentication, tenant-isolation, and permission tests above.
+2. Completed: session/refresh-token persistence, login with throttling, JWT/session validation and `/auth/me`, refresh rotation, and logout. See the [implementation guide](authentication-implementation.md).
+3. Completed: organization creation, listing, profile, and rename.
+4. Completed: the role matrix, member management, and the single-owner model with ownership transfer (migration V4).
+5. Completed: system administrators with startup bootstrap, account disable/enable, and the user → organization lock order (migration V5).
+6. Deferred: automated tests for the scenarios above.
 
 The first version is complete when a user can log in, belong to multiple organizations with different roles, and access only the operations and tenant data permitted by current memberships.
