@@ -2,6 +2,7 @@ package com.longdnh.donot_get_left_behind.tenancy.application.service;
 
 import java.time.Clock;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -63,6 +64,12 @@ public class MembershipService {
             throw new RoleNotAssignableException();
         }
 
+        // Lock order: user, then organization. The FOR SHARE lock keeps the target's account status fixed
+        // until commit, so a concurrent account-disable cannot slip in between this check and the insert.
+        if (!userAccountLookup.lockActiveUser(targetUserId)) {
+            throw new TargetUserUnavailableException();
+        }
+
         // Missing organization and non-member look the same (404) — the lock lookup doubles as existence check.
         organizationRepository.findByIdForUpdate(organizationId)
                 .orElseThrow(OrganizationNotFoundException::new);
@@ -70,10 +77,6 @@ public class MembershipService {
         Membership actor = accessService.requirePermission(organizationId, callerUserId, Permission.ADD_MEMBER);
         if (role == Role.ADMIN && !actor.getRole().allows(Permission.ADD_ADMIN)) {
             throw new InsufficientPermissionException();
-        }
-
-        if (!userAccountLookup.isActiveUser(targetUserId)) {
-            throw new TargetUserUnavailableException();
         }
 
         Instant now = clock.instant();
@@ -149,11 +152,23 @@ public class MembershipService {
      */
     @Transactional
     public OwnershipTransferResult transferOwnership(UUID organizationId, UUID callerUserId, UUID targetMembershipId) {
+        // The body names a membership, but the lock order is user-then-organization, so the user id is
+        // read first WITHOUT a lock, the user is locked (FOR SHARE), then the organization is locked and the
+        // membership is re-read: if it changed in between, the request fails instead of trusting stale data.
+        UUID targetUserId = membershipRepository.findByOrganizationIdAndId(organizationId, targetMembershipId)
+                .orElseThrow(OrganizationNotFoundException::new)
+                .getUserId();
+        // A disabled account must never end up holding the only owner seat.
+        if (!userAccountLookup.lockActiveUser(targetUserId)) {
+            throw new TargetUserUnavailableException();
+        }
+
         organizationRepository.findByIdForUpdate(organizationId)
                 .orElseThrow(OrganizationNotFoundException::new);
         Membership owner = accessService.requirePermission(organizationId, callerUserId, Permission.TRANSFER_OWNERSHIP);
 
         Membership target = membershipRepository.findByOrganizationIdAndId(organizationId, targetMembershipId)
+                .filter(m -> m.getUserId().equals(targetUserId))
                 .orElseThrow(OrganizationNotFoundException::new);
         if (target.getId().equals(owner.getId())) {
             return new OwnershipTransferResult(owner, owner); // transferring to oneself: nothing to do
@@ -161,14 +176,34 @@ public class MembershipService {
         if (!target.isActive()) {
             throw new MembershipNotActiveException();
         }
-        // A disabled account must never end up holding the only owner seat.
-        if (!userAccountLookup.isActiveUser(target.getUserId())) {
-            throw new TargetUserUnavailableException();
-        }
 
         Instant now = clock.instant();
         Membership previousOwner = membershipRepository.update(owner.changeRole(Role.ADMIN, now));
         Membership newOwner = membershipRepository.update(target.changeRole(Role.OWNER, now));
         return new OwnershipTransferResult(newOwner, previousOwner);
+    }
+
+    /**
+     * Reaction to UserDisabledEvent; runs inside identity's transaction, which already holds the user's
+     * row lock (FOR UPDATE). Organizations are locked in id order to keep the protocol "every membership
+     * mutation holds the organization lock" and to make concurrent disables deadlock-free. The ownership
+     * precondition was checked under the same user lock, so finding an owner here is a programming error.
+     */
+    @Transactional
+    public void removeAllMembershipsOf(UUID userId) {
+        List<UUID> organizationIds = membershipRepository.findActiveByUserId(userId).stream()
+                .map(Membership::getOrganizationId)
+                .sorted()
+                .toList();
+        for (UUID organizationId : organizationIds) {
+            organizationRepository.findByIdForUpdate(organizationId);
+        }
+        Instant now = clock.instant();
+        for (Membership membership : membershipRepository.findActiveByUserId(userId)) {
+            if (membership.getRole() == Role.OWNER) {
+                throw new IllegalStateException("Disabled user still owns organization " + membership.getOrganizationId());
+            }
+            membershipRepository.update(membership.remove(now));
+        }
     }
 }

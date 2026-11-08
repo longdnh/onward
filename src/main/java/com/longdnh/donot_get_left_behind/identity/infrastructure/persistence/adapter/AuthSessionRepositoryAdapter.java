@@ -4,6 +4,7 @@ import static com.longdnh.donot_get_left_behind.common.Validation.requireUuidV7;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -109,5 +110,18 @@ public class AuthSessionRepositoryAdapter implements AuthSessionRepository {
 
         return Optional.ofNullable(entity)
                 .map(AuthSessionEntity::toDomain);
+    }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY)
+    public int revokeAllActiveByUserId(UUID userId, Instant now) {
+        // Few sessions per user: load and revoke through the entity so the domain's revokedAt rule applies.
+        List<AuthSessionEntity> sessions = entityManager.createQuery(
+                        "select s from AuthSessionEntity s where s.userId = :userId and s.revokedAt is null",
+                        AuthSessionEntity.class)
+                .setParameter("userId", userId)
+                .getResultList();
+        sessions.forEach(session -> session.revoke(now));
+        return sessions.size();
     }
 }

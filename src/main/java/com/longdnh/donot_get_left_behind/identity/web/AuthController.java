@@ -29,6 +29,7 @@ import com.longdnh.donot_get_left_behind.common.constants.ClientMessages;
 import com.longdnh.donot_get_left_behind.identity.application.dto.LoginResult;
 import com.longdnh.donot_get_left_behind.identity.application.port.UserRepository;
 import com.longdnh.donot_get_left_behind.identity.application.service.LoginService;
+import com.longdnh.donot_get_left_behind.identity.application.service.AccountService;
 import com.longdnh.donot_get_left_behind.identity.application.service.LogoutService;
 import com.longdnh.donot_get_left_behind.identity.application.service.RefreshService;
 import com.longdnh.donot_get_left_behind.identity.application.service.RegisterService;
@@ -42,6 +43,7 @@ import com.longdnh.donot_get_left_behind.identity.web.dto.RegisterResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import com.longdnh.donot_get_left_behind.identity.web.dto.DisableAccountRequest;
 
 @RestController
 @RequestMapping(path = "/api/auth", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -58,6 +60,7 @@ public class AuthController {
         private final boolean secureRefreshCookie;
         private final RefreshService refreshService;
         private final LogoutService logoutService;
+        private final AccountService accountService;
         
         public AuthController(
                         RegisterService registerService,
@@ -67,7 +70,8 @@ public class AuthController {
                         Clock clock,
                         @Value("${app.security.refresh.secure-cookie:true}") boolean secureRefreshCookie,
                         RefreshService refreshService, 
-                        LogoutService logoutService) {
+                        LogoutService logoutService,
+                        AccountService accountService) {
 
                 this.registerService = registerService;
                 this.loginService = loginService;
@@ -77,6 +81,7 @@ public class AuthController {
                 this.secureRefreshCookie = secureRefreshCookie;
                 this.refreshService = refreshService;
                 this.logoutService = logoutService;
+                this.accountService = accountService;
         }
 
         @GetMapping("/csrf")
@@ -196,6 +201,15 @@ public class AuthController {
                 servletResponse.addHeader(HttpHeaders.SET_COOKIE, expiredRefreshCookie().toString());
                 csrfTokenRepository.saveToken(null, servletRequest, servletResponse);
 
+                return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build();
+        }
+
+        /** Self-service disable: requires the password again; all sessions are revoked by the service. */
+        @PostMapping(path = "/account/disable", consumes = MediaType.APPLICATION_JSON_VALUE)
+        public ResponseEntity<Void> disableAccount(
+                        @Valid @RequestBody DisableAccountRequest request,
+                        @AuthenticationPrincipal Jwt jwt) {
+                accountService.disableSelf(UUID.fromString(jwt.getSubject()), request.password());
                 return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build();
         }
 

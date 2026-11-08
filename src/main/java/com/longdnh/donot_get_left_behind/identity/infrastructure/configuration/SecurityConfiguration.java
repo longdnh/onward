@@ -56,6 +56,10 @@ public class SecurityConfiguration {
                                 .permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/auth/logout")
                                 .permitAll()
+                                // System-wide role: the filter chain has all the information it needs,
+                                // unlike tenant roles, which depend on the organization in the route.
+                                .requestMatchers("/api/admin/**")
+                                .hasRole("SYSTEM_ADMIN")
                                 .anyRequest()
                                 .authenticated())
                 .exceptionHandling(

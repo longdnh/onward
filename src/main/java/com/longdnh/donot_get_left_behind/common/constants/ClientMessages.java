@@ -11,6 +11,8 @@ public final class ClientMessages {
     public static final String ROLE_NOT_ASSIGNABLE = "Only ADMIN or MEMBER can be assigned; ownership changes through an ownership transfer";
     public static final String MEMBERSHIP_NOT_ACTIVE = "The membership has been removed; add the user again to reactivate it";
     public static final String OWNER_PROTECTED = "The owner's membership can only change through an ownership transfer";
+    public static final String OWNERSHIP_MUST_BE_TRANSFERRED = "The account owns at least one organization; transfer ownership before disabling it";
+    public static final String SELF_ACTION_NOT_ALLOWED = "This action cannot target your own account";
 
     public static final String PASSWORD_REQUIRED = "password is required";
     public static final String PASSWORD_LENGTH_OUT_OF_RANGE = "password must contain between %d and %d characters";

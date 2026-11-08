@@ -8,6 +8,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.longdnh.donot_get_left_behind.tenancy.application.port.UserAccountLookup;
 
+import java.util.List;
+
 import jakarta.persistence.EntityManager;
 
 /**
@@ -31,5 +33,16 @@ public class UserAccountLookupAdapter implements UserAccountLookup {
                 .setParameter("id", userId)
                 .getSingleResult();
         return count.longValue() > 0;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    @Transactional(propagation = Propagation.MANDATORY)
+    public boolean lockActiveUser(UUID userId) {
+        List<String> status = entityManager.createNativeQuery(
+                        "select status from users where id = :id for share", String.class)
+                .setParameter("id", userId)
+                .getResultList();
+        return !status.isEmpty() && "ACTIVE".equals(status.get(0));
     }
 }

@@ -95,4 +95,17 @@ public class MembershipRepositoryAdapter implements MembershipRepository {
                 .map(MembershipEntity::toDomain);
     }
 
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY, readOnly = true)
+    public List<Membership> findActiveByUserId(UUID userId) {
+        return entityManager.createQuery(
+                        "select m from MembershipEntity m where m.userId = :userId and m.status = :status order by m.organizationId",
+                        MembershipEntity.class)
+                .setParameter("userId", userId)
+                .setParameter("status", Membership.MembershipStatus.ACTIVE)
+                .getResultList()
+                .stream()
+                .map(MembershipEntity::toDomain)
+                .toList();
+    }
 }

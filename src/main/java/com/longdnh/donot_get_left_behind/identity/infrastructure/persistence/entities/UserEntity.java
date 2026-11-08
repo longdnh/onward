@@ -3,6 +3,7 @@ package com.longdnh.donot_get_left_behind.identity.infrastructure.persistence.en
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
+import com.longdnh.donot_get_left_behind.identity.domain.SystemRole;
 import com.longdnh.donot_get_left_behind.identity.domain.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -32,6 +33,10 @@ public class UserEntity {
     @Column(name = "status", nullable = false, length = 32)
     private User.UserStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "system_role", length = 32)
+    private SystemRole systemRole;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -48,12 +53,13 @@ public class UserEntity {
         entity.email = user.getEmail();
         entity.passwordHash = user.getPasswordHash();
         entity.status = user.getStatus();
+        entity.systemRole = user.getSystemRole();
         entity.createdAt = user.getCreatedAt();
         entity.updatedAt = user.getUpdatedAt();
         return entity;
     }
 
     public User toDomain() {
-        return new User(id, email, passwordHash, status, createdAt, updatedAt);
+        return new User(id, email, passwordHash, status, systemRole, createdAt, updatedAt);
     }
 }

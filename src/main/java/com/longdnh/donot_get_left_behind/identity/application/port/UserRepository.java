@@ -21,4 +21,9 @@ public interface UserRepository {
 
     /** Saves domain state; database constraints are enforced when the transaction flushes or commits. */
     User save(User user);
+
+    /** Row lock (FOR UPDATE) held until the caller's transaction ends. Lock order across the system: user, then organization. */
+    Optional<User> findByIdForUpdate(UUID id);
+
+    boolean existsSystemAdmin();
 }

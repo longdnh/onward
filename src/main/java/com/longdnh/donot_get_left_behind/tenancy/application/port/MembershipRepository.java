@@ -1,5 +1,6 @@
 package com.longdnh.donot_get_left_behind.tenancy.application.port;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -40,4 +41,6 @@ public interface MembershipRepository {
      */
     Optional<Membership> findByOrganizationIdAndId(UUID organizationId, UUID membershipId);
 
+    /** All ACTIVE memberships of one user across organizations. Must be called inside the caller's transaction. */
+    List<Membership> findActiveByUserId(UUID userId);
 }

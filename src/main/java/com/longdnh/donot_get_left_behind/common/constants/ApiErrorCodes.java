@@ -8,6 +8,8 @@ public final class ApiErrorCodes {
     public static final String MEMBERSHIP_ALREADY_ACTIVE = "MEMBERSHIP_ALREADY_ACTIVE";
     public static final String MEMBERSHIP_NOT_ACTIVE = "MEMBERSHIP_NOT_ACTIVE";
     public static final String OWNER_PROTECTED = "OWNER_PROTECTED";
+    public static final String OWNERSHIP_MUST_BE_TRANSFERRED = "OWNERSHIP_MUST_BE_TRANSFERRED";
+    public static final String SELF_ACTION_NOT_ALLOWED = "SELF_ACTION_NOT_ALLOWED";
     public static final String INTERNAL_ERROR = "INTERNAL_ERROR";
     public static final String NOT_FOUND = "NOT_FOUND";
     public static final String METHOD_NOT_ALLOWED = "METHOD_NOT_ALLOWED";

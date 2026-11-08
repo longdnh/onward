@@ -10,6 +10,8 @@ import java.util.UUID;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
@@ -64,9 +66,15 @@ public class SessionJwtAuthenticationConverter implements Converter<Jwt, Abstrac
             throw invalidAuthentication();
         }
 
+        // System role is read from the database on every request (not baked into the JWT), so revoking
+        // it takes effect immediately. Tenant roles are NOT authorities: they depend on the route's organization.
+        List<GrantedAuthority> authorities = user.isSystemAdmin()
+                ? List.of(new SimpleGrantedAuthority("ROLE_SYSTEM_ADMIN"))
+                : List.of();
+
         return new JwtAuthenticationToken(
                 jwt,
-                List.of(),
+                authorities,
                 userId.toString());
     }
 

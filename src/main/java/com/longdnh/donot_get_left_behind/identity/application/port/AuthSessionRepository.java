@@ -22,4 +22,7 @@ public interface AuthSessionRepository {
     void revoke(UUID sessionId, Instant now);
 
     Optional<AuthSession> findByIdForUpdate(UUID id);
+
+    /** Revokes every session of the user that is not yet revoked. Returns how many were revoked. */
+    int revokeAllActiveByUserId(UUID userId, Instant now);
 }
