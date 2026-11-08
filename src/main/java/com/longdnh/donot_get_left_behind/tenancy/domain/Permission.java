@@ -1,6 +1,6 @@
 package com.longdnh.donot_get_left_behind.tenancy.domain;
 
-/** One row of the action table in docs/authentication-authorization.md §5. */
+/** One row of the action table in docs/authentication-authorization.md §5 (single-owner model). */
 public enum Permission {
     READ_ORGANIZATION,
     UPDATE_ORGANIZATION,
@@ -10,5 +10,6 @@ public enum Permission {
     ADD_ADMIN,
     CHANGE_ROLE,
     REMOVE_MEMBER,
-    REMOVE_ADMIN_OR_OWNER
+    REMOVE_ADMIN,
+    TRANSFER_OWNERSHIP
 }

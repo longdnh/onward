@@ -50,7 +50,13 @@ public class MembershipRepositoryAdapter implements MembershipRepository {
     @Override
     @Transactional(propagation = Propagation.MANDATORY)
     public Membership update(Membership membership) {
-        return entityManager.merge(MembershipEntity.fromDomain(membership)).toDomain();
+        MembershipEntity merged = entityManager.merge(MembershipEntity.fromDomain(membership));
+        // JPA normally defers UPDATEs to commit and may reorder them. The partial unique index
+        // on (organization_id) WHERE role = 'OWNER' AND status = 'ACTIVE' is checked per statement,
+        // so "old owner -> ADMIN" must hit the database before "new owner -> OWNER". Flushing here
+        // makes the statement order equal the call order.
+        entityManager.flush();
+        return merged.toDomain();
     }
 
     @Override
@@ -75,4 +81,18 @@ public class MembershipRepositoryAdapter implements MembershipRepository {
 
         return PageResult.of(items, page, total);
     }
+
+    @Override
+    @Transactional(propagation = Propagation.MANDATORY, readOnly = true)
+    public Optional<Membership> findByOrganizationIdAndId(UUID organizationId, UUID membershipId) {
+        return entityManager.createQuery(
+                        "select m from MembershipEntity m where m.organizationId = :organizationId and m.id = :id",
+                        MembershipEntity.class)
+                .setParameter("organizationId", organizationId)
+                .setParameter("id", membershipId)
+                .getResultStream()
+                .findFirst()
+                .map(MembershipEntity::toDomain);
+    }
+
 }

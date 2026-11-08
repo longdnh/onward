@@ -6,7 +6,8 @@ import java.util.Set;
 /**
  * Role inside one organization. The permission sets are the matrix in
  * docs/authentication-authorization.md §5; they say nothing about target-specific rules
- * (last owner, admin cannot touch an owner), which application services check separately.
+ * (the owner cannot be removed or demoted; admin cannot touch an admin), which application
+ * services check separately.
  */
 public enum Role {
     OWNER(EnumSet.allOf(Permission.class)),

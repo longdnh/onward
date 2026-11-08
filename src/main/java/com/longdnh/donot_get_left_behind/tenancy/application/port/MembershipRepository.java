@@ -19,7 +19,11 @@ public interface MembershipRepository {
      */
     Optional<Membership> findByOrganizationIdAndUserId(UUID organizationId, UUID userId);
 
-    /** Writes the new state of an existing membership. Must be called inside the caller's transaction. */
+    /**
+     * Writes the new state of an existing membership and flushes it immediately, so statements reach
+     * the database in call order (ownership transfer relies on this; see the adapter).
+     * Must be called inside the caller's transaction.
+     */
     Membership update(Membership membership);
 
     /**
@@ -28,4 +32,12 @@ public interface MembershipRepository {
      * Must be called inside the caller's transaction.
      */
     PageResult<Membership> findByOrganizationId(UUID organizationId, PageRequest page);
+
+    /**
+     * Finds a membership by its id, but only inside the given organization. A membership id
+     * from organization B used in an organization A route must come back empty.
+     * Must be called inside the caller's transaction.
+     */
+    Optional<Membership> findByOrganizationIdAndId(UUID organizationId, UUID membershipId);
+
 }
