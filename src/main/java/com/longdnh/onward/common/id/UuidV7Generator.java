@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.common.id;
+package com.longdnh.onward.common.id;
 
 import java.util.UUID;
 

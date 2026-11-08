@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.common.Exception;
+package com.longdnh.onward.common.Exception;
 
 import java.io.IOException;
 
@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
-import com.longdnh.donot_get_left_behind.common.constants.ApiErrorCodes;
-import com.longdnh.donot_get_left_behind.common.constants.ClientMessages;
+import com.longdnh.onward.common.constants.ApiErrorCodes;
+import com.longdnh.onward.common.constants.ClientMessages;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;

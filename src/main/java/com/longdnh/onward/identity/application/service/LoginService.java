@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.identity.application.service;
+package com.longdnh.onward.identity.application.service;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -9,18 +9,18 @@ import java.util.Objects;
 
 import org.springframework.transaction.support.TransactionTemplate;
 
-import com.longdnh.donot_get_left_behind.identity.application.exception.InvalidCredentialsException;
-import com.longdnh.donot_get_left_behind.identity.application.dto.LoginResult;
-import com.longdnh.donot_get_left_behind.identity.application.port.AccessTokenIssuer;
-import com.longdnh.donot_get_left_behind.identity.application.port.AuthSessionRepository;
-import com.longdnh.donot_get_left_behind.common.id.IdGenerator;
-import com.longdnh.donot_get_left_behind.identity.application.port.PasswordHasher;
-import com.longdnh.donot_get_left_behind.identity.application.port.RefreshTokenGenerator;
-import com.longdnh.donot_get_left_behind.identity.application.port.RefreshTokenRepository;
-import com.longdnh.donot_get_left_behind.identity.application.port.UserRepository;
-import com.longdnh.donot_get_left_behind.identity.domain.AuthSession;
-import com.longdnh.donot_get_left_behind.identity.domain.RefreshToken;
-import com.longdnh.donot_get_left_behind.identity.domain.User;
+import com.longdnh.onward.identity.application.exception.InvalidCredentialsException;
+import com.longdnh.onward.identity.application.dto.LoginResult;
+import com.longdnh.onward.identity.application.port.AccessTokenIssuer;
+import com.longdnh.onward.identity.application.port.AuthSessionRepository;
+import com.longdnh.onward.common.id.IdGenerator;
+import com.longdnh.onward.identity.application.port.PasswordHasher;
+import com.longdnh.onward.identity.application.port.RefreshTokenGenerator;
+import com.longdnh.onward.identity.application.port.RefreshTokenRepository;
+import com.longdnh.onward.identity.application.port.UserRepository;
+import com.longdnh.onward.identity.domain.AuthSession;
+import com.longdnh.onward.identity.domain.RefreshToken;
+import com.longdnh.onward.identity.domain.User;
 
 import lombok.RequiredArgsConstructor;
 

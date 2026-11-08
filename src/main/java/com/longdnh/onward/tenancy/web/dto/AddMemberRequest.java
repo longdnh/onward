@@ -1,8 +1,8 @@
-package com.longdnh.donot_get_left_behind.tenancy.web.dto;
+package com.longdnh.onward.tenancy.web.dto;
 
 import java.util.UUID;
 
-import com.longdnh.donot_get_left_behind.tenancy.domain.Role;
+import com.longdnh.onward.tenancy.domain.Role;
 
 import jakarta.validation.constraints.NotNull;
 

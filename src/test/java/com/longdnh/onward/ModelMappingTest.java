@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind;
+package com.longdnh.onward;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -9,13 +9,13 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 
-import com.longdnh.donot_get_left_behind.identity.domain.User;
-import com.longdnh.donot_get_left_behind.identity.infrastructure.persistence.entities.UserEntity;
-import com.longdnh.donot_get_left_behind.tenancy.domain.Membership;
-import com.longdnh.donot_get_left_behind.tenancy.domain.Organization;
-import com.longdnh.donot_get_left_behind.tenancy.domain.Role;
-import com.longdnh.donot_get_left_behind.tenancy.infrastructure.persistence.entities.MembershipEntity;
-import com.longdnh.donot_get_left_behind.tenancy.infrastructure.persistence.entities.OrganizationEntity;
+import com.longdnh.onward.identity.domain.User;
+import com.longdnh.onward.identity.infrastructure.persistence.entities.UserEntity;
+import com.longdnh.onward.tenancy.domain.Membership;
+import com.longdnh.onward.tenancy.domain.Organization;
+import com.longdnh.onward.tenancy.domain.Role;
+import com.longdnh.onward.tenancy.infrastructure.persistence.entities.MembershipEntity;
+import com.longdnh.onward.tenancy.infrastructure.persistence.entities.OrganizationEntity;
 
 class ModelMappingTest {
 
@@ -28,7 +28,7 @@ class ModelMappingTest {
     @ParameterizedTest
     @EnumSource(User.UserStatus.class)
     void userMappingPreservesCredentialsStatusAndHistory(User.UserStatus status) {
-        User original = new User(USER, "alice+research@example.test", "encoded-hash", status, CREATED, UPDATED);
+        User original = new User(USER, "alice+research@example.test", "encoded-hash", status, null, CREATED, UPDATED);
         User restored = UserEntity.fromDomain(original).toDomain();
 
         assertAll(

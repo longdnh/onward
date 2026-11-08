@@ -1,6 +1,6 @@
-package com.longdnh.donot_get_left_behind.tenancy.web.dto;
+package com.longdnh.onward.tenancy.web.dto;
 
-import com.longdnh.donot_get_left_behind.tenancy.domain.Organization;
+import com.longdnh.onward.tenancy.domain.Organization;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;

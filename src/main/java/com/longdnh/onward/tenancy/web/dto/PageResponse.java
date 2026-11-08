@@ -1,9 +1,9 @@
-package com.longdnh.donot_get_left_behind.tenancy.web.dto;
+package com.longdnh.onward.tenancy.web.dto;
 
 import java.util.List;
 import java.util.function.Function;
 
-import com.longdnh.donot_get_left_behind.common.pagination.PageResult;
+import com.longdnh.onward.common.pagination.PageResult;
 
 public record PageResponse<T>(List<T> items, int page, int size, long totalElements) {
 

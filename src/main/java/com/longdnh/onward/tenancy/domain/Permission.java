@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.tenancy.domain;
+package com.longdnh.onward.tenancy.domain;
 
 /** One row of the action table in docs/authentication-authorization.md §5 (single-owner model). */
 public enum Permission {

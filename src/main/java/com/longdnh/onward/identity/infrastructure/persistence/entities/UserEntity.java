@@ -1,10 +1,10 @@
-package com.longdnh.donot_get_left_behind.identity.infrastructure.persistence.entities;
+package com.longdnh.onward.identity.infrastructure.persistence.entities;
 
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
-import com.longdnh.donot_get_left_behind.identity.domain.SystemRole;
-import com.longdnh.donot_get_left_behind.identity.domain.User;
+import com.longdnh.onward.identity.domain.SystemRole;
+import com.longdnh.onward.identity.domain.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

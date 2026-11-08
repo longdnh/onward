@@ -1,10 +1,10 @@
-package com.longdnh.donot_get_left_behind.identity.application.port;
+package com.longdnh.onward.identity.application.port;
 
 import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.longdnh.donot_get_left_behind.identity.domain.RefreshToken;
+import com.longdnh.onward.identity.domain.RefreshToken;
 
 public interface RefreshTokenRepository {
 

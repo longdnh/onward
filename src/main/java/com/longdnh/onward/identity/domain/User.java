@@ -1,7 +1,7 @@
-package com.longdnh.donot_get_left_behind.identity.domain;
+package com.longdnh.onward.identity.domain;
 
-import static com.longdnh.donot_get_left_behind.common.Validation.requireNonBlank;
-import static com.longdnh.donot_get_left_behind.common.Validation.requireUuidV7;
+import static com.longdnh.onward.common.Validation.requireNonBlank;
+import static com.longdnh.onward.common.Validation.requireUuidV7;
 
 import java.time.Instant;
 import java.util.Locale;

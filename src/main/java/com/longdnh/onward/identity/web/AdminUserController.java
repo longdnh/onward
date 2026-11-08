@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.identity.web;
+package com.longdnh.onward.identity.web;
 
 import java.util.UUID;
 
@@ -13,8 +13,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.longdnh.donot_get_left_behind.identity.application.service.AccountService;
-import com.longdnh.donot_get_left_behind.identity.web.dto.AdminUserResponse;
+import com.longdnh.onward.identity.application.service.AccountService;
+import com.longdnh.onward.identity.web.dto.AdminUserResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -47,7 +47,7 @@ public class AdminUserController {
     }
 
     private static ResponseEntity<AdminUserResponse> ok(
-            com.longdnh.donot_get_left_behind.identity.domain.User user) {
+            com.longdnh.onward.identity.domain.User user) {
         return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(AdminUserResponse.from(user));
     }
 }

@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.common.pagination;
+package com.longdnh.onward.common.pagination;
 
 /**
  * Offset pagination. page is zero-based. The web layer validates user input and maps

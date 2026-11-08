@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.tenancy.web.dto;
+package com.longdnh.onward.tenancy.web.dto;
 
 import java.util.UUID;
 

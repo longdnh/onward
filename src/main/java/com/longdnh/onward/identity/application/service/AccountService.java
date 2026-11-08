@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.identity.application.service;
+package com.longdnh.onward.identity.application.service;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -8,16 +8,16 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.longdnh.donot_get_left_behind.common.events.UserDisabledEvent;
-import com.longdnh.donot_get_left_behind.identity.application.exception.InvalidCredentialsException;
-import com.longdnh.donot_get_left_behind.identity.application.exception.OwnershipMustBeTransferredException;
-import com.longdnh.donot_get_left_behind.identity.application.exception.SelfActionNotAllowedException;
-import com.longdnh.donot_get_left_behind.identity.application.exception.UserNotFoundException;
-import com.longdnh.donot_get_left_behind.identity.application.port.AuthSessionRepository;
-import com.longdnh.donot_get_left_behind.identity.application.port.OrganizationOwnershipCheck;
-import com.longdnh.donot_get_left_behind.identity.application.port.PasswordHasher;
-import com.longdnh.donot_get_left_behind.identity.application.port.UserRepository;
-import com.longdnh.donot_get_left_behind.identity.domain.User;
+import com.longdnh.onward.common.events.UserDisabledEvent;
+import com.longdnh.onward.identity.application.exception.InvalidCredentialsException;
+import com.longdnh.onward.identity.application.exception.OwnershipMustBeTransferredException;
+import com.longdnh.onward.identity.application.exception.SelfActionNotAllowedException;
+import com.longdnh.onward.identity.application.exception.UserNotFoundException;
+import com.longdnh.onward.identity.application.port.AuthSessionRepository;
+import com.longdnh.onward.identity.application.port.OrganizationOwnershipCheck;
+import com.longdnh.onward.identity.application.port.PasswordHasher;
+import com.longdnh.onward.identity.application.port.UserRepository;
+import com.longdnh.onward.identity.domain.User;
 
 import lombok.RequiredArgsConstructor;
 

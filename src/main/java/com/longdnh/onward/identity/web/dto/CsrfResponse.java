@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.identity.web.dto;
+package com.longdnh.onward.identity.web.dto;
 
 public record CsrfResponse(String headerName, String token) {
 

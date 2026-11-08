@@ -1,10 +1,10 @@
-package com.longdnh.donot_get_left_behind.tenancy.infrastructure.persistence.entities;
+package com.longdnh.onward.tenancy.infrastructure.persistence.entities;
 
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
-import com.longdnh.donot_get_left_behind.tenancy.domain.Membership;
-import com.longdnh.donot_get_left_behind.tenancy.domain.Role;
+import com.longdnh.onward.tenancy.domain.Membership;
+import com.longdnh.onward.tenancy.domain.Role;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.identity.application.port;
+package com.longdnh.onward.identity.application.port;
 
 public interface PasswordHasher {
 

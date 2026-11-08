@@ -1,10 +1,10 @@
-package com.longdnh.donot_get_left_behind.identity.infrastructure.configuration;
+package com.longdnh.onward.identity.infrastructure.configuration;
 
-import com.longdnh.donot_get_left_behind.common.Exception.ApiErrorWriter;
-import com.longdnh.donot_get_left_behind.common.constants.ApiErrorCodes;
-import com.longdnh.donot_get_left_behind.common.constants.ClientMessages;
-import com.longdnh.donot_get_left_behind.identity.infrastructure.security.RegistrationRateLimitFilter;
-import com.longdnh.donot_get_left_behind.identity.infrastructure.security.SessionJwtAuthenticationConverter;
+import com.longdnh.onward.common.Exception.ApiErrorWriter;
+import com.longdnh.onward.common.constants.ApiErrorCodes;
+import com.longdnh.onward.common.constants.ClientMessages;
+import com.longdnh.onward.identity.infrastructure.security.RegistrationRateLimitFilter;
+import com.longdnh.onward.identity.infrastructure.security.SessionJwtAuthenticationConverter;
 import jakarta.servlet.DispatcherType;
 import java.time.Clock;
 import java.time.Duration;

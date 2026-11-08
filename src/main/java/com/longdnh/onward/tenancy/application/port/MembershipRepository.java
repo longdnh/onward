@@ -1,12 +1,12 @@
-package com.longdnh.donot_get_left_behind.tenancy.application.port;
+package com.longdnh.onward.tenancy.application.port;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-import com.longdnh.donot_get_left_behind.common.pagination.PageRequest;
-import com.longdnh.donot_get_left_behind.common.pagination.PageResult;
-import com.longdnh.donot_get_left_behind.tenancy.domain.Membership;
+import com.longdnh.onward.common.pagination.PageRequest;
+import com.longdnh.onward.common.pagination.PageResult;
+import com.longdnh.onward.tenancy.domain.Membership;
 
 public interface MembershipRepository {
 

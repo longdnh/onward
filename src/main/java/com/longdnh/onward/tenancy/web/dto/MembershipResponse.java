@@ -1,8 +1,8 @@
-package com.longdnh.donot_get_left_behind.tenancy.web.dto;
+package com.longdnh.onward.tenancy.web.dto;
 
 import java.util.UUID;
 
-import com.longdnh.donot_get_left_behind.tenancy.domain.Membership;
+import com.longdnh.onward.tenancy.domain.Membership;
 
 public record MembershipResponse(UUID id, UUID organizationId, UUID userId, String role, String status) {
 

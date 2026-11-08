@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.tenancy.infrastructure.persistence.adapter;
+package com.longdnh.onward.tenancy.infrastructure.persistence.adapter;
 
 import java.util.UUID;
 
@@ -6,7 +6,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.longdnh.donot_get_left_behind.tenancy.application.port.UserAccountLookup;
+import com.longdnh.onward.tenancy.application.port.UserAccountLookup;
 
 import java.util.List;
 

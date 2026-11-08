@@ -1,10 +1,10 @@
-package com.longdnh.donot_get_left_behind.tenancy.infrastructure.event;
+package com.longdnh.onward.tenancy.infrastructure.event;
 
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
-import com.longdnh.donot_get_left_behind.common.events.UserDisabledEvent;
-import com.longdnh.donot_get_left_behind.tenancy.application.service.MembershipService;
+import com.longdnh.onward.common.events.UserDisabledEvent;
+import com.longdnh.onward.tenancy.application.service.MembershipService;
 
 import lombok.RequiredArgsConstructor;
 

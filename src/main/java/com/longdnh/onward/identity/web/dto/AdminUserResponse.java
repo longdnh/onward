@@ -1,8 +1,8 @@
-package com.longdnh.donot_get_left_behind.identity.web.dto;
+package com.longdnh.onward.identity.web.dto;
 
 import java.util.UUID;
 
-import com.longdnh.donot_get_left_behind.identity.domain.User;
+import com.longdnh.onward.identity.domain.User;
 
 /** Never includes the password hash. */
 public record AdminUserResponse(UUID id, String email, String status, String systemRole) {

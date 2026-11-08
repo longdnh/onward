@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.tenancy.application.port;
+package com.longdnh.onward.tenancy.application.port;
 
 import java.util.UUID;
 

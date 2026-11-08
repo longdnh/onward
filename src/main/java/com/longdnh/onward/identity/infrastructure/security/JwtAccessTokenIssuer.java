@@ -1,6 +1,6 @@
-package com.longdnh.donot_get_left_behind.identity.infrastructure.security;
+package com.longdnh.onward.identity.infrastructure.security;
 
-import static com.longdnh.donot_get_left_behind.common.Validation.requireUuidV7;
+import static com.longdnh.onward.common.Validation.requireUuidV7;
 
 import java.time.Instant;
 import java.util.List;
@@ -14,8 +14,8 @@ import org.springframework.security.oauth2.jwt.JwtEncoder;
 import org.springframework.security.oauth2.jwt.JwtEncoderParameters;
 import org.springframework.stereotype.Component;
 
-import com.longdnh.donot_get_left_behind.identity.application.port.AccessTokenIssuer;
-import com.longdnh.donot_get_left_behind.identity.infrastructure.configuration.AuthProperties;
+import com.longdnh.onward.identity.application.port.AccessTokenIssuer;
+import com.longdnh.onward.identity.infrastructure.configuration.AuthProperties;
 
 @Component 
 public final class JwtAccessTokenIssuer implements AccessTokenIssuer {

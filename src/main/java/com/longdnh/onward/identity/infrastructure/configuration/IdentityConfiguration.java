@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.identity.infrastructure.configuration;
+package com.longdnh.onward.identity.infrastructure.configuration;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,17 +19,17 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import com.longdnh.donot_get_left_behind.identity.application.RegistrationPolicy;
-import com.longdnh.donot_get_left_behind.identity.application.port.AccessTokenIssuer;
-import com.longdnh.donot_get_left_behind.identity.application.port.AuthSessionRepository;
-import com.longdnh.donot_get_left_behind.common.id.IdGenerator;
-import com.longdnh.donot_get_left_behind.identity.application.port.PasswordHasher;
-import com.longdnh.donot_get_left_behind.identity.application.port.RefreshTokenGenerator;
-import com.longdnh.donot_get_left_behind.identity.application.port.RefreshTokenRepository;
-import com.longdnh.donot_get_left_behind.identity.application.port.UserRepository;
-import com.longdnh.donot_get_left_behind.identity.application.service.LoginService;
-import com.longdnh.donot_get_left_behind.identity.application.service.LogoutService;
-import com.longdnh.donot_get_left_behind.identity.application.service.RefreshService;
+import com.longdnh.onward.identity.application.RegistrationPolicy;
+import com.longdnh.onward.identity.application.port.AccessTokenIssuer;
+import com.longdnh.onward.identity.application.port.AuthSessionRepository;
+import com.longdnh.onward.common.id.IdGenerator;
+import com.longdnh.onward.identity.application.port.PasswordHasher;
+import com.longdnh.onward.identity.application.port.RefreshTokenGenerator;
+import com.longdnh.onward.identity.application.port.RefreshTokenRepository;
+import com.longdnh.onward.identity.application.port.UserRepository;
+import com.longdnh.onward.identity.application.service.LoginService;
+import com.longdnh.onward.identity.application.service.LogoutService;
+import com.longdnh.onward.identity.application.service.RefreshService;
 
 import jakarta.validation.Validator;
 

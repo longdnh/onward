@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.common.configuration;
+package com.longdnh.onward.common.configuration;
 
 import java.time.Clock;
 

@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.common.Exception;
+package com.longdnh.onward.common.Exception;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

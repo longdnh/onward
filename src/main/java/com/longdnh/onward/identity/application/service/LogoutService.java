@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.identity.application.service;
+package com.longdnh.onward.identity.application.service;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -7,10 +7,10 @@ import java.util.UUID;
 
 import org.springframework.transaction.support.TransactionTemplate;
 
-import com.longdnh.donot_get_left_behind.identity.application.port.AuthSessionRepository;
-import com.longdnh.donot_get_left_behind.identity.application.port.RefreshTokenGenerator;
-import com.longdnh.donot_get_left_behind.identity.application.port.RefreshTokenRepository;
-import com.longdnh.donot_get_left_behind.identity.domain.AuthSession;
+import com.longdnh.onward.identity.application.port.AuthSessionRepository;
+import com.longdnh.onward.identity.application.port.RefreshTokenGenerator;
+import com.longdnh.onward.identity.application.port.RefreshTokenRepository;
+import com.longdnh.onward.identity.domain.AuthSession;
 
 import lombok.RequiredArgsConstructor;
 

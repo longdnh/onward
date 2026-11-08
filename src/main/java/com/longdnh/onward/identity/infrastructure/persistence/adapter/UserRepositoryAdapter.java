@@ -1,7 +1,7 @@
-package com.longdnh.donot_get_left_behind.identity.infrastructure.persistence.adapter;
+package com.longdnh.onward.identity.infrastructure.persistence.adapter;
 
-import static com.longdnh.donot_get_left_behind.common.Validation.requireNonBlank;
-import static com.longdnh.donot_get_left_behind.common.Validation.requireUuidV7;
+import static com.longdnh.onward.common.Validation.requireNonBlank;
+import static com.longdnh.onward.common.Validation.requireUuidV7;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -10,12 +10,12 @@ import org.hibernate.exception.ConstraintViolationException;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.longdnh.donot_get_left_behind.identity.application.exception.EmailAlreadyExistsException;
-import com.longdnh.donot_get_left_behind.identity.application.port.UserRepository;
-import com.longdnh.donot_get_left_behind.identity.domain.SystemRole;
-import com.longdnh.donot_get_left_behind.identity.domain.User;
-import com.longdnh.donot_get_left_behind.identity.infrastructure.persistence.entities.UserEntity;
-import com.longdnh.donot_get_left_behind.identity.infrastructure.persistence.repository.SpringDataUserRepository;
+import com.longdnh.onward.identity.application.exception.EmailAlreadyExistsException;
+import com.longdnh.onward.identity.application.port.UserRepository;
+import com.longdnh.onward.identity.domain.SystemRole;
+import com.longdnh.onward.identity.domain.User;
+import com.longdnh.onward.identity.infrastructure.persistence.entities.UserEntity;
+import com.longdnh.onward.identity.infrastructure.persistence.repository.SpringDataUserRepository;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;

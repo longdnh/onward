@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.tenancy.application.service;
+package com.longdnh.onward.tenancy.application.service;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -9,23 +9,23 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.longdnh.donot_get_left_behind.common.id.IdGenerator;
-import com.longdnh.donot_get_left_behind.common.pagination.PageRequest;
-import com.longdnh.donot_get_left_behind.common.pagination.PageResult;
-import com.longdnh.donot_get_left_behind.tenancy.application.exception.InsufficientPermissionException;
-import com.longdnh.donot_get_left_behind.tenancy.application.exception.MembershipAlreadyActiveException;
-import com.longdnh.donot_get_left_behind.tenancy.application.exception.MembershipNotActiveException;
-import com.longdnh.donot_get_left_behind.tenancy.application.exception.OrganizationNotFoundException;
-import com.longdnh.donot_get_left_behind.tenancy.application.exception.OwnerProtectedException;
-import com.longdnh.donot_get_left_behind.tenancy.application.exception.RoleNotAssignableException;
-import com.longdnh.donot_get_left_behind.tenancy.application.exception.TargetUserUnavailableException;
-import com.longdnh.donot_get_left_behind.tenancy.application.dto.OwnershipTransferResult;
-import com.longdnh.donot_get_left_behind.tenancy.application.port.MembershipRepository;
-import com.longdnh.donot_get_left_behind.tenancy.application.port.OrganizationRepository;
-import com.longdnh.donot_get_left_behind.tenancy.application.port.UserAccountLookup;
-import com.longdnh.donot_get_left_behind.tenancy.domain.Membership;
-import com.longdnh.donot_get_left_behind.tenancy.domain.Permission;
-import com.longdnh.donot_get_left_behind.tenancy.domain.Role;
+import com.longdnh.onward.common.id.IdGenerator;
+import com.longdnh.onward.common.pagination.PageRequest;
+import com.longdnh.onward.common.pagination.PageResult;
+import com.longdnh.onward.tenancy.application.exception.InsufficientPermissionException;
+import com.longdnh.onward.tenancy.application.exception.MembershipAlreadyActiveException;
+import com.longdnh.onward.tenancy.application.exception.MembershipNotActiveException;
+import com.longdnh.onward.tenancy.application.exception.OrganizationNotFoundException;
+import com.longdnh.onward.tenancy.application.exception.OwnerProtectedException;
+import com.longdnh.onward.tenancy.application.exception.RoleNotAssignableException;
+import com.longdnh.onward.tenancy.application.exception.TargetUserUnavailableException;
+import com.longdnh.onward.tenancy.application.dto.OwnershipTransferResult;
+import com.longdnh.onward.tenancy.application.port.MembershipRepository;
+import com.longdnh.onward.tenancy.application.port.OrganizationRepository;
+import com.longdnh.onward.tenancy.application.port.UserAccountLookup;
+import com.longdnh.onward.tenancy.domain.Membership;
+import com.longdnh.onward.tenancy.domain.Permission;
+import com.longdnh.onward.tenancy.domain.Role;
 
 
 import lombok.RequiredArgsConstructor;

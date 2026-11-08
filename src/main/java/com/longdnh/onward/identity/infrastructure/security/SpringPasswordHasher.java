@@ -1,11 +1,11 @@
-package com.longdnh.donot_get_left_behind.identity.infrastructure.security;
+package com.longdnh.onward.identity.infrastructure.security;
 
 import java.util.Objects;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import com.longdnh.donot_get_left_behind.identity.application.port.PasswordHasher;
+import com.longdnh.onward.identity.application.port.PasswordHasher;
 
 @Component
 public final class SpringPasswordHasher implements PasswordHasher {

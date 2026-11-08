@@ -1,10 +1,10 @@
-package com.longdnh.donot_get_left_behind.identity.infrastructure.persistence.entities;
+package com.longdnh.onward.identity.infrastructure.persistence.entities;
 
 import java.time.Instant;
 import java.util.Objects;
 import java.util.UUID;
 
-import com.longdnh.donot_get_left_behind.identity.domain.RefreshToken;
+import com.longdnh.onward.identity.domain.RefreshToken;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

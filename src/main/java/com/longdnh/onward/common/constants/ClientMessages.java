@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.common.constants;
+package com.longdnh.onward.common.constants;
 
 /** Client-facing text shared by input validation, application exceptions, and HTTP responses. */
 public final class ClientMessages {

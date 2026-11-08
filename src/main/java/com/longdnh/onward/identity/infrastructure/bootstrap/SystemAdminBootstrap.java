@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.identity.infrastructure.bootstrap;
+package com.longdnh.onward.identity.infrastructure.bootstrap;
 
 import java.util.Locale;
 
@@ -8,8 +8,8 @@ import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.support.TransactionTemplate;
 
-import com.longdnh.donot_get_left_behind.identity.application.port.UserRepository;
-import com.longdnh.donot_get_left_behind.identity.application.service.AccountService;
+import com.longdnh.onward.identity.application.port.UserRepository;
+import com.longdnh.onward.identity.application.service.AccountService;
 
 import lombok.extern.slf4j.Slf4j;
 

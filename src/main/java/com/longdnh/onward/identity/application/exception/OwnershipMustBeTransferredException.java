@@ -1,10 +1,10 @@
-package com.longdnh.donot_get_left_behind.identity.application.exception;
+package com.longdnh.onward.identity.application.exception;
 
 import org.springframework.http.HttpStatus;
 
-import com.longdnh.donot_get_left_behind.common.Exception.ApiException;
-import com.longdnh.donot_get_left_behind.common.constants.ApiErrorCodes;
-import com.longdnh.donot_get_left_behind.common.constants.ClientMessages;
+import com.longdnh.onward.common.Exception.ApiException;
+import com.longdnh.onward.common.constants.ApiErrorCodes;
+import com.longdnh.onward.common.constants.ClientMessages;
 
 /** Disabling would leave at least one organization without an owner; the user must transfer ownership first. */
 public final class OwnershipMustBeTransferredException extends ApiException {

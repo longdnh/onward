@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.common.Exception;
+package com.longdnh.onward.common.Exception;
 
 import org.springframework.http.HttpStatus;
 

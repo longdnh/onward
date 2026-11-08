@@ -1,6 +1,6 @@
-package com.longdnh.donot_get_left_behind.identity.infrastructure.security;
+package com.longdnh.onward.identity.infrastructure.security;
 
-import static com.longdnh.donot_get_left_behind.common.Validation.requireUuidV7;
+import static com.longdnh.onward.common.Validation.requireUuidV7;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -16,10 +16,10 @@ import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 import org.springframework.stereotype.Component;
 
-import com.longdnh.donot_get_left_behind.common.constants.ClientMessages;
-import com.longdnh.donot_get_left_behind.identity.application.port.AuthSessionRepository;
-import com.longdnh.donot_get_left_behind.identity.application.port.UserRepository;
-import com.longdnh.donot_get_left_behind.identity.infrastructure.configuration.AuthProperties;
+import com.longdnh.onward.common.constants.ClientMessages;
+import com.longdnh.onward.identity.application.port.AuthSessionRepository;
+import com.longdnh.onward.identity.application.port.UserRepository;
+import com.longdnh.onward.identity.infrastructure.configuration.AuthProperties;
 
 import lombok.RequiredArgsConstructor;
 

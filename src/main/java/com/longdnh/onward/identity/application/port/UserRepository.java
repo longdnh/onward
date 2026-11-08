@@ -1,10 +1,10 @@
-package com.longdnh.donot_get_left_behind.identity.application.port;
+package com.longdnh.onward.identity.application.port;
 
 import java.util.Optional;
 import java.util.UUID;
 
-import com.longdnh.donot_get_left_behind.identity.application.exception.EmailAlreadyExistsException;
-import com.longdnh.donot_get_left_behind.identity.domain.User;
+import com.longdnh.onward.identity.application.exception.EmailAlreadyExistsException;
+import com.longdnh.onward.identity.domain.User;
 
 public interface UserRepository {
 

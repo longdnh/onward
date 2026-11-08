@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.tenancy.domain;
+package com.longdnh.onward.tenancy.domain;
 
 import static org.junit.jupiter.api.Assertions.*;
 

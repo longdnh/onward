@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.common.Exception;
+package com.longdnh.onward.common.Exception;
 
 import org.jspecify.annotations.Nullable;
 import org.springframework.http.CacheControl;
@@ -15,8 +15,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-import com.longdnh.donot_get_left_behind.common.constants.ApiErrorCodes;
-import com.longdnh.donot_get_left_behind.common.constants.ClientMessages;
+import com.longdnh.onward.common.constants.ApiErrorCodes;
+import com.longdnh.onward.common.constants.ClientMessages;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {

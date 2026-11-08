@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.common.events;
+package com.longdnh.onward.common.events;
 
 import java.util.UUID;
 

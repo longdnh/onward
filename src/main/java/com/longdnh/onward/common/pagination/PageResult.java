@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.common.pagination;
+package com.longdnh.onward.common.pagination;
 
 import java.util.List;
 import java.util.function.Function;

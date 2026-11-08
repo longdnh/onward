@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.common.constants;
+package com.longdnh.onward.common.constants;
 
 /** Stable identifiers for frontend error handling, independent of display-message wording. */
 public final class ApiErrorCodes {

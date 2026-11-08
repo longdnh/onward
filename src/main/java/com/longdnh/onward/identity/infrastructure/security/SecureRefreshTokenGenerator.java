@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.identity.infrastructure.security;
+package com.longdnh.onward.identity.infrastructure.security;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -10,7 +10,7 @@ import java.util.Objects;
 
 import org.springframework.stereotype.Component;
 
-import com.longdnh.donot_get_left_behind.identity.application.port.RefreshTokenGenerator;
+import com.longdnh.onward.identity.application.port.RefreshTokenGenerator;
 
 @Component
 public final class SecureRefreshTokenGenerator implements RefreshTokenGenerator {

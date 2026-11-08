@@ -1,6 +1,6 @@
-package com.longdnh.donot_get_left_behind.identity.infrastructure.persistence.adapter;
+package com.longdnh.onward.identity.infrastructure.persistence.adapter;
 
-import static com.longdnh.donot_get_left_behind.common.Validation.requireUuidV7;
+import static com.longdnh.onward.common.Validation.requireUuidV7;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -12,9 +12,9 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.longdnh.donot_get_left_behind.identity.application.port.AuthSessionRepository;
-import com.longdnh.donot_get_left_behind.identity.domain.AuthSession;
-import com.longdnh.donot_get_left_behind.identity.infrastructure.persistence.entities.AuthSessionEntity;
+import com.longdnh.onward.identity.application.port.AuthSessionRepository;
+import com.longdnh.onward.identity.domain.AuthSession;
+import com.longdnh.onward.identity.infrastructure.persistence.entities.AuthSessionEntity;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;

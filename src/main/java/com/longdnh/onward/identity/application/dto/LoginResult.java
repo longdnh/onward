@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.identity.application.dto;
+package com.longdnh.onward.identity.application.dto;
 
 import java.time.Instant;
 

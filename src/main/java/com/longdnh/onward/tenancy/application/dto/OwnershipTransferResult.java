@@ -1,6 +1,6 @@
-package com.longdnh.donot_get_left_behind.tenancy.application.dto;
+package com.longdnh.onward.tenancy.application.dto;
 
-import com.longdnh.donot_get_left_behind.tenancy.domain.Membership;
+import com.longdnh.onward.tenancy.domain.Membership;
 
 public record OwnershipTransferResult(Membership newOwner, Membership previousOwner) {
 }

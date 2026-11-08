@@ -1,8 +1,8 @@
-package com.longdnh.donot_get_left_behind.tenancy.web.dto;
+package com.longdnh.onward.tenancy.web.dto;
 
 import java.util.UUID;
 
-import com.longdnh.donot_get_left_behind.tenancy.application.dto.OrganizationSummary;
+import com.longdnh.onward.tenancy.application.dto.OrganizationSummary;
 
 public record OrganizationSummaryResponse(UUID id, String name, String role) {
 

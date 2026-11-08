@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.tenancy.web;
+package com.longdnh.onward.tenancy.web;
 
 import java.util.UUID;
 
@@ -17,16 +17,16 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.longdnh.donot_get_left_behind.common.pagination.PageRequest;
-import com.longdnh.donot_get_left_behind.tenancy.application.dto.CreateOrganizationResult;
-import com.longdnh.donot_get_left_behind.tenancy.application.service.OrganizationService;
-import com.longdnh.donot_get_left_behind.tenancy.web.dto.CreateOrganizationRequest;
-import com.longdnh.donot_get_left_behind.tenancy.web.dto.CreateOrganizationResponse;
-import com.longdnh.donot_get_left_behind.tenancy.web.dto.MembershipResponse;
-import com.longdnh.donot_get_left_behind.tenancy.web.dto.OrganizationResponse;
-import com.longdnh.donot_get_left_behind.tenancy.web.dto.OrganizationSummaryResponse;
-import com.longdnh.donot_get_left_behind.tenancy.web.dto.PageResponse;
-import com.longdnh.donot_get_left_behind.tenancy.web.dto.UpdateOrganizationRequest;
+import com.longdnh.onward.common.pagination.PageRequest;
+import com.longdnh.onward.tenancy.application.dto.CreateOrganizationResult;
+import com.longdnh.onward.tenancy.application.service.OrganizationService;
+import com.longdnh.onward.tenancy.web.dto.CreateOrganizationRequest;
+import com.longdnh.onward.tenancy.web.dto.CreateOrganizationResponse;
+import com.longdnh.onward.tenancy.web.dto.MembershipResponse;
+import com.longdnh.onward.tenancy.web.dto.OrganizationResponse;
+import com.longdnh.onward.tenancy.web.dto.OrganizationSummaryResponse;
+import com.longdnh.onward.tenancy.web.dto.PageResponse;
+import com.longdnh.onward.tenancy.web.dto.UpdateOrganizationRequest;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;

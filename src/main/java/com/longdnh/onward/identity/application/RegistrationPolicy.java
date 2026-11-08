@@ -1,13 +1,13 @@
-package com.longdnh.donot_get_left_behind.identity.application;
+package com.longdnh.onward.identity.application;
 
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.longdnh.donot_get_left_behind.common.constants.ClientMessages;
-import com.longdnh.donot_get_left_behind.identity.application.exception.InvalidRegistrationException;
-import com.longdnh.donot_get_left_behind.identity.domain.User;
+import com.longdnh.onward.common.constants.ClientMessages;
+import com.longdnh.onward.identity.application.exception.InvalidRegistrationException;
+import com.longdnh.onward.identity.domain.User;
 
 import jakarta.validation.Validator;
 import jakarta.validation.constraints.Email;

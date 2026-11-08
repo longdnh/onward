@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.tenancy.application.service;
+package com.longdnh.onward.tenancy.application.service;
 
 import java.util.UUID;
 
@@ -6,11 +6,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.longdnh.donot_get_left_behind.tenancy.application.exception.InsufficientPermissionException;
-import com.longdnh.donot_get_left_behind.tenancy.application.exception.OrganizationNotFoundException;
-import com.longdnh.donot_get_left_behind.tenancy.application.port.MembershipRepository;
-import com.longdnh.donot_get_left_behind.tenancy.domain.Membership;
-import com.longdnh.donot_get_left_behind.tenancy.domain.Permission;
+import com.longdnh.onward.tenancy.application.exception.InsufficientPermissionException;
+import com.longdnh.onward.tenancy.application.exception.OrganizationNotFoundException;
+import com.longdnh.onward.tenancy.application.port.MembershipRepository;
+import com.longdnh.onward.tenancy.domain.Membership;
+import com.longdnh.onward.tenancy.domain.Permission;
 
 import lombok.RequiredArgsConstructor;
 

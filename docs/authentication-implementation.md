@@ -17,7 +17,7 @@ The infrastructure configuration can pass ordinary `Duration` values into applic
 Suggested file: `identity/infrastructure/configuration/AuthProperties.java`. This code is documentation only.
 
 ```java
-package com.longdnh.donot_get_left_behind.identity.infrastructure.configuration;
+package com.longdnh.onward.identity.infrastructure.configuration;
 
 import java.time.Duration;
 

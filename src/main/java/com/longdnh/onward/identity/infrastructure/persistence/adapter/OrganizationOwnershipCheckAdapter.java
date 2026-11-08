@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.identity.infrastructure.persistence.adapter;
+package com.longdnh.onward.identity.infrastructure.persistence.adapter;
 
 import java.util.List;
 import java.util.UUID;
@@ -7,7 +7,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.longdnh.donot_get_left_behind.identity.application.port.OrganizationOwnershipCheck;
+import com.longdnh.onward.identity.application.port.OrganizationOwnershipCheck;
 
 import jakarta.persistence.EntityManager;
 

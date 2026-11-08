@@ -1,7 +1,7 @@
-package com.longdnh.donot_get_left_behind.tenancy.application.dto;
+package com.longdnh.onward.tenancy.application.dto;
 
-import com.longdnh.donot_get_left_behind.tenancy.domain.Membership;
-import com.longdnh.donot_get_left_behind.tenancy.domain.Organization;
+import com.longdnh.onward.tenancy.domain.Membership;
+import com.longdnh.onward.tenancy.domain.Organization;
 
 public record CreateOrganizationResult(Organization organization, Membership ownerMembership) {
 }

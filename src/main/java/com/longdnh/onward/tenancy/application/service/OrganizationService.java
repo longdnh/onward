@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.tenancy.application.service;
+package com.longdnh.onward.tenancy.application.service;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -7,18 +7,18 @@ import java.util.UUID;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.longdnh.donot_get_left_behind.common.id.IdGenerator;
-import com.longdnh.donot_get_left_behind.common.pagination.PageRequest;
-import com.longdnh.donot_get_left_behind.common.pagination.PageResult;
-import com.longdnh.donot_get_left_behind.tenancy.application.dto.CreateOrganizationResult;
-import com.longdnh.donot_get_left_behind.tenancy.application.dto.OrganizationSummary;
-import com.longdnh.donot_get_left_behind.tenancy.application.exception.OrganizationNotFoundException;
-import com.longdnh.donot_get_left_behind.tenancy.application.port.MembershipRepository;
-import com.longdnh.donot_get_left_behind.tenancy.application.port.OrganizationRepository;
-import com.longdnh.donot_get_left_behind.tenancy.domain.Membership;
-import com.longdnh.donot_get_left_behind.tenancy.domain.Organization;
-import com.longdnh.donot_get_left_behind.tenancy.domain.Permission;
-import com.longdnh.donot_get_left_behind.tenancy.domain.Role;
+import com.longdnh.onward.common.id.IdGenerator;
+import com.longdnh.onward.common.pagination.PageRequest;
+import com.longdnh.onward.common.pagination.PageResult;
+import com.longdnh.onward.tenancy.application.dto.CreateOrganizationResult;
+import com.longdnh.onward.tenancy.application.dto.OrganizationSummary;
+import com.longdnh.onward.tenancy.application.exception.OrganizationNotFoundException;
+import com.longdnh.onward.tenancy.application.port.MembershipRepository;
+import com.longdnh.onward.tenancy.application.port.OrganizationRepository;
+import com.longdnh.onward.tenancy.domain.Membership;
+import com.longdnh.onward.tenancy.domain.Organization;
+import com.longdnh.onward.tenancy.domain.Permission;
+import com.longdnh.onward.tenancy.domain.Role;
 
 import lombok.RequiredArgsConstructor;
 

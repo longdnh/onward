@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.identity.application.service;
+package com.longdnh.onward.identity.application.service;
 
 import java.time.Clock;
 import java.time.Instant;
@@ -6,12 +6,12 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
-import com.longdnh.donot_get_left_behind.identity.application.RegistrationPolicy;
-import com.longdnh.donot_get_left_behind.identity.application.exception.EmailAlreadyExistsException;
-import com.longdnh.donot_get_left_behind.common.id.IdGenerator;
-import com.longdnh.donot_get_left_behind.identity.application.port.PasswordHasher;
-import com.longdnh.donot_get_left_behind.identity.application.port.UserRepository;
-import com.longdnh.donot_get_left_behind.identity.domain.User;
+import com.longdnh.onward.identity.application.RegistrationPolicy;
+import com.longdnh.onward.identity.application.exception.EmailAlreadyExistsException;
+import com.longdnh.onward.common.id.IdGenerator;
+import com.longdnh.onward.identity.application.port.PasswordHasher;
+import com.longdnh.onward.identity.application.port.UserRepository;
+import com.longdnh.onward.identity.domain.User;
 
 @Service
 public class RegisterService {

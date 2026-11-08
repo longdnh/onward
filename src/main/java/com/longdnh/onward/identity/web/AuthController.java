@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.identity.web;
+package com.longdnh.onward.identity.web;
 
 import java.time.Clock;
 import java.time.Duration;
@@ -24,26 +24,26 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.longdnh.donot_get_left_behind.identity.application.exception.InvalidRefreshTokenException;
-import com.longdnh.donot_get_left_behind.common.constants.ClientMessages;
-import com.longdnh.donot_get_left_behind.identity.application.dto.LoginResult;
-import com.longdnh.donot_get_left_behind.identity.application.port.UserRepository;
-import com.longdnh.donot_get_left_behind.identity.application.service.LoginService;
-import com.longdnh.donot_get_left_behind.identity.application.service.AccountService;
-import com.longdnh.donot_get_left_behind.identity.application.service.LogoutService;
-import com.longdnh.donot_get_left_behind.identity.application.service.RefreshService;
-import com.longdnh.donot_get_left_behind.identity.application.service.RegisterService;
-import com.longdnh.donot_get_left_behind.identity.web.dto.CsrfResponse;
-import com.longdnh.donot_get_left_behind.identity.web.dto.CurrentUserResponse;
-import com.longdnh.donot_get_left_behind.identity.web.dto.LoginRequest;
-import com.longdnh.donot_get_left_behind.identity.web.dto.LoginResponse;
-import com.longdnh.donot_get_left_behind.identity.web.dto.RegisterRequest;
-import com.longdnh.donot_get_left_behind.identity.web.dto.RegisterResponse;
+import com.longdnh.onward.identity.application.exception.InvalidRefreshTokenException;
+import com.longdnh.onward.common.constants.ClientMessages;
+import com.longdnh.onward.identity.application.dto.LoginResult;
+import com.longdnh.onward.identity.application.port.UserRepository;
+import com.longdnh.onward.identity.application.service.LoginService;
+import com.longdnh.onward.identity.application.service.AccountService;
+import com.longdnh.onward.identity.application.service.LogoutService;
+import com.longdnh.onward.identity.application.service.RefreshService;
+import com.longdnh.onward.identity.application.service.RegisterService;
+import com.longdnh.onward.identity.web.dto.CsrfResponse;
+import com.longdnh.onward.identity.web.dto.CurrentUserResponse;
+import com.longdnh.onward.identity.web.dto.LoginRequest;
+import com.longdnh.onward.identity.web.dto.LoginResponse;
+import com.longdnh.onward.identity.web.dto.RegisterRequest;
+import com.longdnh.onward.identity.web.dto.RegisterResponse;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
-import com.longdnh.donot_get_left_behind.identity.web.dto.DisableAccountRequest;
+import com.longdnh.onward.identity.web.dto.DisableAccountRequest;
 
 @RestController
 @RequestMapping(path = "/api/auth", produces = MediaType.APPLICATION_JSON_VALUE)

@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.identity.infrastructure.configuration;
+package com.longdnh.onward.identity.infrastructure.configuration;
 
 import java.time.Duration;
 

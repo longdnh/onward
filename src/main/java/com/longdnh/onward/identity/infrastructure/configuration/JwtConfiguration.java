@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.identity.infrastructure.configuration;
+package com.longdnh.onward.identity.infrastructure.configuration;
 
 import java.io.IOException;
 import java.security.interfaces.RSAPrivateKey;
@@ -26,7 +26,7 @@ import org.springframework.security.oauth2.jwt.JwtTimestampValidator;
 import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 
-import com.longdnh.donot_get_left_behind.common.constants.ClientMessages;
+import com.longdnh.onward.common.constants.ClientMessages;
 
 @Configuration(proxyBeanMethods = false)
 public class JwtConfiguration {

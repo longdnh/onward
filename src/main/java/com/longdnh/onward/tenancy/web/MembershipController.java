@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.tenancy.web;
+package com.longdnh.onward.tenancy.web;
 
 import java.util.UUID;
 
@@ -18,14 +18,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.longdnh.donot_get_left_behind.common.pagination.PageRequest;
-import com.longdnh.donot_get_left_behind.tenancy.application.service.MembershipService;
-import com.longdnh.donot_get_left_behind.tenancy.web.dto.AddMemberRequest;
-import com.longdnh.donot_get_left_behind.tenancy.web.dto.ChangeRoleRequest;
-import com.longdnh.donot_get_left_behind.tenancy.web.dto.MembershipResponse;
-import com.longdnh.donot_get_left_behind.tenancy.web.dto.OwnershipTransferResponse;
-import com.longdnh.donot_get_left_behind.tenancy.web.dto.PageResponse;
-import com.longdnh.donot_get_left_behind.tenancy.web.dto.TransferOwnershipRequest;
+import com.longdnh.onward.common.pagination.PageRequest;
+import com.longdnh.onward.tenancy.application.service.MembershipService;
+import com.longdnh.onward.tenancy.web.dto.AddMemberRequest;
+import com.longdnh.onward.tenancy.web.dto.ChangeRoleRequest;
+import com.longdnh.onward.tenancy.web.dto.MembershipResponse;
+import com.longdnh.onward.tenancy.web.dto.OwnershipTransferResponse;
+import com.longdnh.onward.tenancy.web.dto.PageResponse;
+import com.longdnh.onward.tenancy.web.dto.TransferOwnershipRequest;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;

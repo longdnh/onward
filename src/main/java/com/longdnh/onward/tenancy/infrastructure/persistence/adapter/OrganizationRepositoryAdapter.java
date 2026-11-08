@@ -1,4 +1,4 @@
-package com.longdnh.donot_get_left_behind.tenancy.infrastructure.persistence.adapter;
+package com.longdnh.onward.tenancy.infrastructure.persistence.adapter;
 
 import java.util.List;
 import java.util.Optional;
@@ -8,14 +8,14 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.longdnh.donot_get_left_behind.common.pagination.PageRequest;
-import com.longdnh.donot_get_left_behind.common.pagination.PageResult;
-import com.longdnh.donot_get_left_behind.tenancy.application.dto.OrganizationSummary;
-import com.longdnh.donot_get_left_behind.tenancy.application.port.OrganizationRepository;
-import com.longdnh.donot_get_left_behind.tenancy.domain.Membership;
-import com.longdnh.donot_get_left_behind.tenancy.domain.Role;
-import com.longdnh.donot_get_left_behind.tenancy.domain.Organization;
-import com.longdnh.donot_get_left_behind.tenancy.infrastructure.persistence.entities.OrganizationEntity;
+import com.longdnh.onward.common.pagination.PageRequest;
+import com.longdnh.onward.common.pagination.PageResult;
+import com.longdnh.onward.tenancy.application.dto.OrganizationSummary;
+import com.longdnh.onward.tenancy.application.port.OrganizationRepository;
+import com.longdnh.onward.tenancy.domain.Membership;
+import com.longdnh.onward.tenancy.domain.Role;
+import com.longdnh.onward.tenancy.domain.Organization;
+import com.longdnh.onward.tenancy.infrastructure.persistence.entities.OrganizationEntity;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.LockModeType;
