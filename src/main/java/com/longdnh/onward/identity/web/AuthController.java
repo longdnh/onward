@@ -24,21 +24,24 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.longdnh.onward.identity.application.exception.InvalidRefreshTokenException;
 import com.longdnh.onward.common.constants.ClientMessages;
 import com.longdnh.onward.identity.application.dto.LoginResult;
 import com.longdnh.onward.identity.application.port.UserRepository;
 import com.longdnh.onward.identity.application.service.LoginService;
 import com.longdnh.onward.identity.application.service.AccountService;
+import com.longdnh.onward.identity.application.service.EmailVerificationService;
 import com.longdnh.onward.identity.application.service.LogoutService;
+import com.longdnh.onward.identity.application.service.PasswordResetService;
 import com.longdnh.onward.identity.application.service.RefreshService;
 import com.longdnh.onward.identity.application.service.RegisterService;
 import com.longdnh.onward.identity.web.dto.CsrfResponse;
 import com.longdnh.onward.identity.web.dto.CurrentUserResponse;
 import com.longdnh.onward.identity.web.dto.LoginRequest;
 import com.longdnh.onward.identity.web.dto.LoginResponse;
+import com.longdnh.onward.identity.web.dto.EmailRequest;
 import com.longdnh.onward.identity.web.dto.RegisterRequest;
-import com.longdnh.onward.identity.web.dto.RegisterResponse;
+import com.longdnh.onward.identity.web.dto.ResetPasswordRequest;
+import com.longdnh.onward.identity.web.dto.VerifyEmailRequest;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -61,7 +64,9 @@ public class AuthController {
         private final RefreshService refreshService;
         private final LogoutService logoutService;
         private final AccountService accountService;
-        
+        private final EmailVerificationService emailVerificationService;
+        private final PasswordResetService passwordResetService;
+
         public AuthController(
                         RegisterService registerService,
                         LoginService loginService,
@@ -71,7 +76,9 @@ public class AuthController {
                         @Value("${app.security.refresh.secure-cookie:true}") boolean secureRefreshCookie,
                         RefreshService refreshService, 
                         LogoutService logoutService,
-                        AccountService accountService) {
+                        AccountService accountService,
+                        EmailVerificationService emailVerificationService,
+                        PasswordResetService passwordResetService) {
 
                 this.registerService = registerService;
                 this.loginService = loginService;
@@ -82,6 +89,8 @@ public class AuthController {
                 this.refreshService = refreshService;
                 this.logoutService = logoutService;
                 this.accountService = accountService;
+                this.emailVerificationService = emailVerificationService;
+                this.passwordResetService = passwordResetService;
         }
 
         @GetMapping("/csrf")
@@ -93,17 +102,39 @@ public class AuthController {
                                                 token.getToken()));
         }
 
+        /**
+         * Always 202: the account may have been created, may already exist, or may be unverified and get its
+         * mail again. The body never says which, so the endpoint cannot be used to enumerate emails.
+         */
         @PostMapping(path = "/register", consumes = MediaType.APPLICATION_JSON_VALUE)
-        public ResponseEntity<RegisterResponse> register(
-                        @Valid @RequestBody RegisterRequest request) {
+        public ResponseEntity<Void> register(@Valid @RequestBody RegisterRequest request) {
+                registerService.register(request.email(), request.password());
+                return accepted();
+        }
 
-                UUID userId = registerService.register(
-                                request.email(),
-                                request.password());
+        @PostMapping(path = "/verify-email", consumes = MediaType.APPLICATION_JSON_VALUE)
+        public ResponseEntity<Void> verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
+                emailVerificationService.verify(request.token());
+                return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build();
+        }
 
-                return ResponseEntity.status(HttpStatus.CREATED)
-                                .cacheControl(CacheControl.noStore())
-                                .body(new RegisterResponse(userId));
+        @PostMapping(path = "/verification/resend", consumes = MediaType.APPLICATION_JSON_VALUE)
+        public ResponseEntity<Void> resendVerification(@Valid @RequestBody EmailRequest request) {
+                emailVerificationService.resend(request.email());
+                return accepted();
+        }
+
+        @PostMapping(path = "/forgot-password", consumes = MediaType.APPLICATION_JSON_VALUE)
+        public ResponseEntity<Void> forgotPassword(@Valid @RequestBody EmailRequest request) {
+                passwordResetService.requestReset(request.email());
+                return accepted();
+        }
+
+        /** The reset revokes every session of the account; the client must sign in again. */
+        @PostMapping(path = "/reset-password", consumes = MediaType.APPLICATION_JSON_VALUE)
+        public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+                passwordResetService.reset(request.token(), request.newPassword());
+                return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build();
         }
 
         @PostMapping(path = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -150,7 +181,7 @@ public class AuthController {
                 UUID userId = UUID.fromString(jwt.getSubject());
 
                 var user = userRepository.findById(userId)
-                                .filter(candidate -> candidate.isActive())
+                                .filter(candidate -> candidate.canAuthenticate())
                                 .orElseThrow(() -> new BadCredentialsException(
                                                 ClientMessages.AUTHENTICATION_REQUIRED));
 
@@ -166,9 +197,6 @@ public class AuthController {
                         HttpServletResponse response,
                         @CookieValue(name = REFRESH_COOKIE_NAME) String rawRefreshToken) {
 
-                if (rawRefreshToken == null) {
-                        throw new InvalidRefreshTokenException();
-                }
                 var result = refreshService.refresh(rawRefreshToken);
                 Instant now = clock.instant();
 
@@ -211,6 +239,10 @@ public class AuthController {
                         @AuthenticationPrincipal Jwt jwt) {
                 accountService.disableSelf(UUID.fromString(jwt.getSubject()), request.password());
                 return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build();
+        }
+
+        private static ResponseEntity<Void> accepted() {
+                return ResponseEntity.accepted().cacheControl(CacheControl.noStore()).build();
         }
 
         private ResponseCookie buildRefreshCookie(String rawToken, Instant expiresAt, Instant now) {
