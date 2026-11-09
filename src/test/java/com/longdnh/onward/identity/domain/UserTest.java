@@ -32,7 +32,7 @@ class UserTest {
         assertEquals(email, user.getEmail());
         assertThrows(IllegalArgumentException.class, () -> User.create(ID, email + "x", "hash", NOW));
         assertThrows(IllegalArgumentException.class,
-                () -> new User(ID, email + "x", "hash", User.UserStatus.ACTIVE, null, NOW, NOW));
+                () -> new User(ID, email + "x", "hash", User.UserStatus.ACTIVE, null, null, NOW, NOW));
 
         // Lowercasing U+0130 produces two code points, so the normalized value exceeds the limit.
         String expandsWhenLowercased = "\u0130" + email.substring(1);
@@ -54,6 +54,6 @@ class UserTest {
         assertThrows(IllegalArgumentException.class, () -> User.create(ID, " \t ", "hash", NOW));
         assertThrows(IllegalArgumentException.class, () -> User.create(ID, "a@b.test", "\t", NOW));
         assertThrows(IllegalArgumentException.class,
-                () -> new User(ID, "a@b.test", "hash", User.UserStatus.ACTIVE, null, NOW, NOW.minusSeconds(1)));
+                () -> new User(ID, "a@b.test", "hash", User.UserStatus.ACTIVE, null, null, NOW, NOW.minusSeconds(1)));
     }
 }

@@ -3,11 +3,12 @@ package com.longdnh.onward.identity.infrastructure.configuration;
 import com.longdnh.onward.common.Exception.ApiErrorWriter;
 import com.longdnh.onward.common.constants.ApiErrorCodes;
 import com.longdnh.onward.common.constants.ClientMessages;
-import com.longdnh.onward.identity.infrastructure.security.RegistrationRateLimitFilter;
+import com.longdnh.onward.identity.infrastructure.security.PublicAuthRateLimitFilter;
 import com.longdnh.onward.identity.infrastructure.security.SessionJwtAuthenticationConverter;
 import jakarta.servlet.DispatcherType;
 import java.time.Clock;
 import java.time.Duration;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,6 +26,20 @@ import org.springframework.security.web.csrf.CsrfTokenRepository;
 
 @Configuration(proxyBeanMethods = false)
 public class SecurityConfiguration {
+
+    /** Token-driven flows: no credentials yet, so they must be reachable without a JWT. */
+    private static final String[] PUBLIC_EMAIL_FLOW_PATHS = {
+            "/api/auth/verify-email",
+            "/api/auth/verification/resend",
+            "/api/auth/forgot-password",
+            "/api/auth/reset-password",
+    };
+
+    /** The public endpoints that create rows or send mail; verify/reset consume a secret and need no limit. */
+    private static final Set<String> RATE_LIMITED_PATHS = Set.of(
+            "/api/auth/register",
+            "/api/auth/verification/resend",
+            "/api/auth/forgot-password");
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -49,6 +64,8 @@ public class SecurityConfiguration {
                                 .requestMatchers(HttpMethod.GET, "/api/auth/csrf")
                                 .permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/auth/register")
+                                .permitAll()
+                                .requestMatchers(HttpMethod.POST, PUBLIC_EMAIL_FLOW_PATHS)
                                 .permitAll()
                                 .requestMatchers(HttpMethod.POST, "/api/auth/login")
                                 .permitAll()
@@ -79,7 +96,7 @@ public class SecurityConfiguration {
                                     }
                                 }))
                 .addFilterAfter(
-                        new RegistrationRateLimitFilter(clock, errorWriter, maxAttempts,
+                        new PublicAuthRateLimitFilter(clock, errorWriter, RATE_LIMITED_PATHS, maxAttempts,
                                 Duration.ofSeconds(windowSeconds)),
                         CsrfFilter.class)
                 .oauth2ResourceServer(

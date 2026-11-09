@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
@@ -22,14 +23,20 @@ import org.springframework.transaction.support.TransactionTemplate;
 import com.longdnh.onward.identity.application.RegistrationPolicy;
 import com.longdnh.onward.identity.application.port.AccessTokenIssuer;
 import com.longdnh.onward.identity.application.port.AuthSessionRepository;
+import com.longdnh.onward.identity.application.port.OneTimeTokenGenerator;
+import com.longdnh.onward.identity.application.port.OneTimeTokenRepository;
 import com.longdnh.onward.common.id.IdGenerator;
 import com.longdnh.onward.identity.application.port.PasswordHasher;
 import com.longdnh.onward.identity.application.port.RefreshTokenGenerator;
 import com.longdnh.onward.identity.application.port.RefreshTokenRepository;
 import com.longdnh.onward.identity.application.port.UserRepository;
+import com.longdnh.onward.identity.application.service.EmailVerificationService;
 import com.longdnh.onward.identity.application.service.LoginService;
 import com.longdnh.onward.identity.application.service.LogoutService;
+import com.longdnh.onward.identity.application.service.OneTimeTokenIssuer;
+import com.longdnh.onward.identity.application.service.PasswordResetService;
 import com.longdnh.onward.identity.application.service.RefreshService;
+import com.longdnh.onward.identity.application.service.RegisterService;
 
 import jakarta.validation.Validator;
 
@@ -125,5 +132,74 @@ public class IdentityConfiguration {
             Clock clock) {
         return new LogoutService(refreshTokenRepository, authSessionRepository, refreshTokenGenerator,
                 new TransactionTemplate(transactionManager), clock);
+    }
+
+    @Bean
+    public EmailVerificationService emailVerificationService(
+            UserRepository userRepository,
+            OneTimeTokenRepository tokenRepository,
+            OneTimeTokenGenerator tokenGenerator,
+            OneTimeTokenIssuer tokenIssuer,
+            RegistrationPolicy registrationPolicy,
+            ApplicationEventPublisher events,
+            PlatformTransactionManager transactionManager,
+            Clock clock) {
+        return new EmailVerificationService(
+                userRepository,
+                tokenRepository,
+                tokenGenerator,
+                tokenIssuer,
+                registrationPolicy,
+                events,
+                authProperties.emailVerificationTokenLifetime(),
+                authProperties.emailResendCooldown(),
+                new TransactionTemplate(transactionManager),
+                clock);
+    }
+
+    @Bean
+    public PasswordResetService passwordResetService(
+            UserRepository userRepository,
+            OneTimeTokenRepository tokenRepository,
+            OneTimeTokenGenerator tokenGenerator,
+            OneTimeTokenIssuer tokenIssuer,
+            AuthSessionRepository sessionRepository,
+            PasswordHasher passwordHasher,
+            RegistrationPolicy registrationPolicy,
+            ApplicationEventPublisher events,
+            PlatformTransactionManager transactionManager,
+            Clock clock) {
+        return new PasswordResetService(
+                userRepository,
+                tokenRepository,
+                tokenGenerator,
+                tokenIssuer,
+                sessionRepository,
+                passwordHasher,
+                registrationPolicy,
+                events,
+                authProperties.passwordResetTokenLifetime(),
+                authProperties.emailResendCooldown(),
+                new TransactionTemplate(transactionManager),
+                clock);
+    }
+
+    @Bean
+    public RegisterService registerService(
+            UserRepository userRepository,
+            IdGenerator idGenerator,
+            PasswordHasher passwordHasher,
+            RegistrationPolicy registrationPolicy,
+            EmailVerificationService emailVerificationService,
+            PlatformTransactionManager transactionManager,
+            Clock clock) {
+        return new RegisterService(
+                userRepository,
+                idGenerator,
+                passwordHasher,
+                registrationPolicy,
+                emailVerificationService,
+                new TransactionTemplate(transactionManager),
+                clock);
     }
 }
