@@ -1,5 +1,7 @@
 package com.longdnh.onward.identity.infrastructure.configuration;
 
+import com.longdnh.onward.common.constants.ApiPaths;
+import com.longdnh.onward.common.constants.ApiPaths.Auth;
 import com.longdnh.onward.common.Exception.ApiErrorWriter;
 import com.longdnh.onward.common.constants.ApiErrorCodes;
 import com.longdnh.onward.common.constants.ClientMessages;
@@ -29,17 +31,17 @@ public class SecurityConfiguration {
 
     /** Token-driven flows: no credentials yet, so they must be reachable without a JWT. */
     private static final String[] PUBLIC_EMAIL_FLOW_PATHS = {
-            "/api/auth/verify-email",
-            "/api/auth/verification/resend",
-            "/api/auth/forgot-password",
-            "/api/auth/reset-password",
+            Auth.BASE + Auth.VERIFY_EMAIL,
+            Auth.BASE + Auth.RESEND_VERIFICATION,
+            Auth.BASE + Auth.FORGOT_PASSWORD,
+            Auth.BASE + Auth.RESET_PASSWORD,
     };
 
     /** The public endpoints that create rows or send mail; verify/reset consume a secret and need no limit. */
     private static final Set<String> RATE_LIMITED_PATHS = Set.of(
-            "/api/auth/register",
-            "/api/auth/verification/resend",
-            "/api/auth/forgot-password");
+            Auth.BASE + Auth.REGISTER,
+            Auth.BASE + Auth.RESEND_VERIFICATION,
+            Auth.BASE + Auth.FORGOT_PASSWORD);
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -61,21 +63,21 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(
                         authorize -> authorize.dispatcherTypeMatchers(DispatcherType.ERROR)
                                 .permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/auth/csrf")
+                                .requestMatchers(HttpMethod.GET, Auth.BASE + Auth.CSRF)
                                 .permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/auth/register")
+                                .requestMatchers(HttpMethod.POST, Auth.BASE + Auth.REGISTER)
                                 .permitAll()
                                 .requestMatchers(HttpMethod.POST, PUBLIC_EMAIL_FLOW_PATHS)
                                 .permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/auth/login")
+                                .requestMatchers(HttpMethod.POST, Auth.BASE + Auth.LOGIN)
                                 .permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/auth/refresh")
+                                .requestMatchers(HttpMethod.POST, Auth.BASE + Auth.REFRESH)
                                 .permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/auth/logout")
+                                .requestMatchers(HttpMethod.POST, Auth.BASE + Auth.LOGOUT)
                                 .permitAll()
                                 // System-wide role: the filter chain has all the information it needs,
                                 // unlike tenant roles, which depend on the organization in the route.
-                                .requestMatchers("/api/admin/**")
+                                .requestMatchers(ApiPaths.Admin.PATTERN)
                                 .hasRole("SYSTEM_ADMIN")
                                 .anyRequest()
                                 .authenticated())

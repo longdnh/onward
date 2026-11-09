@@ -1,5 +1,6 @@
 package com.longdnh.onward.identity.web;
 
+import com.longdnh.onward.common.constants.ApiPaths;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -49,11 +50,11 @@ import jakarta.validation.Valid;
 import com.longdnh.onward.identity.web.dto.DisableAccountRequest;
 
 @RestController
-@RequestMapping(path = "/api/auth", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = ApiPaths.Auth.BASE, produces = MediaType.APPLICATION_JSON_VALUE)
 public class AuthController {
 
         private static final String REFRESH_COOKIE_NAME = "refresh_token";
-        private static final String REFRESH_COOKIE_PATH = "/api/auth";
+        private static final String REFRESH_COOKIE_PATH = ApiPaths.Auth.BASE;
         
         private final RegisterService registerService;
         private final LoginService loginService;
@@ -93,7 +94,7 @@ public class AuthController {
                 this.passwordResetService = passwordResetService;
         }
 
-        @GetMapping("/csrf")
+        @GetMapping(ApiPaths.Auth.CSRF)
         public ResponseEntity<CsrfResponse> csrf(CsrfToken token) {
                 return ResponseEntity.ok()
                                 .cacheControl(CacheControl.noStore())
@@ -106,38 +107,38 @@ public class AuthController {
          * Always 202: the account may have been created, may already exist, or may be unverified and get its
          * mail again. The body never says which, so the endpoint cannot be used to enumerate emails.
          */
-        @PostMapping(path = "/register", consumes = MediaType.APPLICATION_JSON_VALUE)
+        @PostMapping(path = ApiPaths.Auth.REGISTER, consumes = MediaType.APPLICATION_JSON_VALUE)
         public ResponseEntity<Void> register(@Valid @RequestBody RegisterRequest request) {
                 registerService.register(request.email(), request.password());
                 return accepted();
         }
 
-        @PostMapping(path = "/verify-email", consumes = MediaType.APPLICATION_JSON_VALUE)
+        @PostMapping(path = ApiPaths.Auth.VERIFY_EMAIL, consumes = MediaType.APPLICATION_JSON_VALUE)
         public ResponseEntity<Void> verifyEmail(@Valid @RequestBody VerifyEmailRequest request) {
                 emailVerificationService.verify(request.token());
                 return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build();
         }
 
-        @PostMapping(path = "/verification/resend", consumes = MediaType.APPLICATION_JSON_VALUE)
+        @PostMapping(path = ApiPaths.Auth.RESEND_VERIFICATION, consumes = MediaType.APPLICATION_JSON_VALUE)
         public ResponseEntity<Void> resendVerification(@Valid @RequestBody EmailRequest request) {
                 emailVerificationService.resend(request.email());
                 return accepted();
         }
 
-        @PostMapping(path = "/forgot-password", consumes = MediaType.APPLICATION_JSON_VALUE)
+        @PostMapping(path = ApiPaths.Auth.FORGOT_PASSWORD, consumes = MediaType.APPLICATION_JSON_VALUE)
         public ResponseEntity<Void> forgotPassword(@Valid @RequestBody EmailRequest request) {
                 passwordResetService.requestReset(request.email());
                 return accepted();
         }
 
         /** The reset revokes every session of the account; the client must sign in again. */
-        @PostMapping(path = "/reset-password", consumes = MediaType.APPLICATION_JSON_VALUE)
+        @PostMapping(path = ApiPaths.Auth.RESET_PASSWORD, consumes = MediaType.APPLICATION_JSON_VALUE)
         public ResponseEntity<Void> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
                 passwordResetService.reset(request.token(), request.newPassword());
                 return ResponseEntity.noContent().cacheControl(CacheControl.noStore()).build();
         }
 
-        @PostMapping(path = "/login", consumes = MediaType.APPLICATION_JSON_VALUE)
+        @PostMapping(path = ApiPaths.Auth.LOGIN, consumes = MediaType.APPLICATION_JSON_VALUE)
         public ResponseEntity<LoginResponse> login(
                         @Valid @RequestBody LoginRequest request,
                         HttpServletRequest servletRequest,
@@ -174,7 +175,7 @@ public class AuthController {
                                                 expiresIn));
         }
 
-        @GetMapping("/me")
+        @GetMapping(ApiPaths.Auth.ME)
         public ResponseEntity<CurrentUserResponse> me(
                         @AuthenticationPrincipal Jwt jwt) {
 
@@ -192,7 +193,7 @@ public class AuthController {
                                                 user.getEmail()));
         }
 
-        @PostMapping("/refresh")
+        @PostMapping(ApiPaths.Auth.REFRESH)
         public ResponseEntity<LoginResponse> getRefreshToken(
                         HttpServletResponse response,
                         @CookieValue(name = REFRESH_COOKIE_NAME) String rawRefreshToken) {
@@ -218,7 +219,7 @@ public class AuthController {
                                                 expiresIn));
         }
 
-        @PostMapping("/logout")
+        @PostMapping(ApiPaths.Auth.LOGOUT)
         public ResponseEntity<Void> logout(
                         @CookieValue(name = REFRESH_COOKIE_NAME, required = false) String rawRefreshToken,
                         HttpServletRequest servletRequest,
@@ -233,7 +234,7 @@ public class AuthController {
         }
 
         /** Self-service disable: requires the password again; all sessions are revoked by the service. */
-        @PostMapping(path = "/account/disable", consumes = MediaType.APPLICATION_JSON_VALUE)
+        @PostMapping(path = ApiPaths.Auth.DISABLE_ACCOUNT, consumes = MediaType.APPLICATION_JSON_VALUE)
         public ResponseEntity<Void> disableAccount(
                         @Valid @RequestBody DisableAccountRequest request,
                         @AuthenticationPrincipal Jwt jwt) {

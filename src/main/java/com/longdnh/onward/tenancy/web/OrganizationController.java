@@ -1,5 +1,6 @@
 package com.longdnh.onward.tenancy.web;
 
+import com.longdnh.onward.common.constants.ApiPaths;
 import java.util.UUID;
 
 import org.springframework.http.CacheControl;
@@ -34,7 +35,7 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping(path = "/api/organizations", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = ApiPaths.Organizations.BASE, produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 public class OrganizationController {
 
@@ -57,7 +58,7 @@ public class OrganizationController {
                         MembershipResponse.from(result.ownerMembership())));
     }
 
-    @GetMapping("/{organizationId}")
+    @GetMapping(ApiPaths.Organizations.ORGANIZATION)
     public ResponseEntity<OrganizationResponse> getProfile(
             @PathVariable UUID organizationId,
             @AuthenticationPrincipal Jwt jwt) {
@@ -86,7 +87,7 @@ public class OrganizationController {
                         OrganizationSummaryResponse::from));
     }
 
-    @PatchMapping(path = "/{organizationId}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PatchMapping(path = ApiPaths.Organizations.ORGANIZATION, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<OrganizationResponse> rename(
             @PathVariable UUID organizationId,
             @Valid @RequestBody UpdateOrganizationRequest request,
