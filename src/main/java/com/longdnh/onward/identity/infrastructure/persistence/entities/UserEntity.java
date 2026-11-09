@@ -37,6 +37,9 @@ public class UserEntity {
     @Column(name = "system_role", length = 32)
     private SystemRole systemRole;
 
+    @Column(name = "email_verified_at")
+    private Instant emailVerifiedAt;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -54,12 +57,13 @@ public class UserEntity {
         entity.passwordHash = user.getPasswordHash();
         entity.status = user.getStatus();
         entity.systemRole = user.getSystemRole();
+        entity.emailVerifiedAt = user.getEmailVerifiedAt();
         entity.createdAt = user.getCreatedAt();
         entity.updatedAt = user.getUpdatedAt();
         return entity;
     }
 
     public User toDomain() {
-        return new User(id, email, passwordHash, status, systemRole, createdAt, updatedAt);
+        return new User(id, email, passwordHash, status, systemRole, emailVerifiedAt, createdAt, updatedAt);
     }
 }
