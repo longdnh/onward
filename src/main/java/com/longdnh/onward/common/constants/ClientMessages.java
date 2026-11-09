@@ -30,10 +30,13 @@ public final class ClientMessages {
     public static final String AUTHENTICATION_REQUIRED = "Authentication is required";
     public static final String CSRF_TOKEN_REQUIRED = "A valid CSRF token is required";
     public static final String ACCESS_DENIED = "Access is denied";
-    public static final String REGISTRATION_RATE_LIMITED = "Too many registration attempts. Try again later";
+    public static final String RATE_LIMITED = "Too many requests. Try again later";
     public static final String INVALID_CREDENTIALS = "Invalid email or password";
     public static final String LOGIN_INPUT_TOO_LONG = "Login input is too long";
     public static final String INVALID_REFRESH_TOKEN = "Unable to refresh authentication. Please sign in again";
+    public static final String TOKEN_REQUIRED = "token is required";
+    public static final String INVALID_TOKEN = "The link is invalid or has expired. Request a new one";
+    public static final String EMAIL_NOT_VERIFIED = "Verify your email address before signing in";
 
     private ClientMessages() {
     }

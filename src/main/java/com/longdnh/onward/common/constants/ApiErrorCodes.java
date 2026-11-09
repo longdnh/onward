@@ -22,6 +22,8 @@ public final class ApiErrorCodes {
     public static final String RATE_LIMITED = "RATE_LIMITED";
     public static final String INVALID_CREDENTIALS = "INVALID_CREDENTIALS";
     public static final String INVALID_REFRESH_TOKEN = "INVALID_REFRESH_TOKEN";
+    public static final String INVALID_TOKEN = "INVALID_TOKEN";
+    public static final String EMAIL_NOT_VERIFIED = "EMAIL_NOT_VERIFIED";
 
     private ApiErrorCodes() {
     }
