@@ -1,5 +1,6 @@
 package com.longdnh.onward.identity.web;
 
+import com.longdnh.onward.common.constants.ApiPaths;
 import java.util.UUID;
 
 import org.springframework.http.CacheControl;
@@ -20,28 +21,28 @@ import lombok.RequiredArgsConstructor;
 
 /** Reachable only with ROLE_SYSTEM_ADMIN; see SecurityConfiguration. */
 @RestController
-@RequestMapping(path = "/api/admin/users", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = ApiPaths.Admin.USERS, produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 public class AdminUserController {
 
     private final AccountService accountService;
 
-    @GetMapping("/{userId}")
+    @GetMapping(ApiPaths.Admin.USER)
     public ResponseEntity<AdminUserResponse> get(@PathVariable UUID userId) {
         return ok(accountService.get(userId));
     }
 
-    @PostMapping("/{userId}/disable")
+    @PostMapping(ApiPaths.Admin.USER_DISABLE)
     public ResponseEntity<AdminUserResponse> disable(@PathVariable UUID userId, @AuthenticationPrincipal Jwt jwt) {
         return ok(accountService.disableByAdmin(UUID.fromString(jwt.getSubject()), userId));
     }
 
-    @PostMapping("/{userId}/enable")
+    @PostMapping(ApiPaths.Admin.USER_ENABLE)
     public ResponseEntity<AdminUserResponse> enable(@PathVariable UUID userId) {
         return ok(accountService.enable(userId));
     }
 
-    @PostMapping("/{userId}/promote")
+    @PostMapping(ApiPaths.Admin.USER_PROMOTE)
     public ResponseEntity<AdminUserResponse> promote(@PathVariable UUID userId) {
         return ok(accountService.promoteToSystemAdmin(userId));
     }

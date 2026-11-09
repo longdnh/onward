@@ -13,6 +13,13 @@ services:
     networks:
       - postgres_network
 
+  mailpit:
+    image: axllent/mailpit:v1.28
+    container_name: onward-mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
 networks:
   postgres_network:
     

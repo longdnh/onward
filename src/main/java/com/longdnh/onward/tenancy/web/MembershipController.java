@@ -1,5 +1,6 @@
 package com.longdnh.onward.tenancy.web;
 
+import com.longdnh.onward.common.constants.ApiPaths;
 import java.util.UUID;
 
 import org.springframework.http.CacheControl;
@@ -33,13 +34,13 @@ import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping(path = "/api/organizations/{organizationId}/memberships", produces = MediaType.APPLICATION_JSON_VALUE)
+@RequestMapping(path = ApiPaths.Organizations.MEMBERSHIPS, produces = MediaType.APPLICATION_JSON_VALUE)
 @RequiredArgsConstructor
 public class MembershipController {
 
     private final MembershipService membershipService;
 
-    @GetMapping("/me")
+    @GetMapping(ApiPaths.Organizations.MY_MEMBERSHIP)
     public ResponseEntity<MembershipResponse> getOwn(
             @PathVariable UUID organizationId,
             @AuthenticationPrincipal Jwt jwt) {
@@ -73,7 +74,7 @@ public class MembershipController {
     }
 
 
-    @PatchMapping(path = "/{membershipId}/role", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PatchMapping(path = ApiPaths.Organizations.MEMBERSHIP_ROLE, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<MembershipResponse> changeRole(
             @PathVariable UUID organizationId,
             @PathVariable UUID membershipId,
@@ -84,7 +85,7 @@ public class MembershipController {
                 membershipService.changeRole(organizationId, callerId(jwt), membershipId, request.role())));
     }
 
-    @DeleteMapping("/{membershipId}")
+    @DeleteMapping(ApiPaths.Organizations.MEMBERSHIP)
     public ResponseEntity<Void> remove(
             @PathVariable UUID organizationId,
             @PathVariable UUID membershipId,
@@ -95,7 +96,7 @@ public class MembershipController {
     }
 
     /** Mapped under /memberships because it is a membership mutation; the body names the receiving membership. */
-    @PostMapping(path = "/ownership-transfer", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @PostMapping(path = ApiPaths.Organizations.OWNERSHIP_TRANSFER, consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<OwnershipTransferResponse> transferOwnership(
             @PathVariable UUID organizationId,
             @Valid @RequestBody TransferOwnershipRequest request,

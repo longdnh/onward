@@ -9,6 +9,7 @@ import java.util.Objects;
 
 import org.springframework.transaction.support.TransactionTemplate;
 
+import com.longdnh.onward.identity.application.exception.EmailNotVerifiedException;
 import com.longdnh.onward.identity.application.exception.InvalidCredentialsException;
 import com.longdnh.onward.identity.application.dto.LoginResult;
 import com.longdnh.onward.identity.application.port.AccessTokenIssuer;
@@ -68,6 +69,11 @@ public class LoginService {
             throw new InvalidCredentialsException();
         }
 
+        // Only reached with the correct password, so this code leaks nothing to an outsider.
+        if (!verifiedUser.isEmailVerified()) {
+            throw new EmailNotVerifiedException();
+        }
+
         LoginResult result = transactionTemplate.execute(
                 status -> createLogin(verifiedUser));
 
@@ -79,7 +85,7 @@ public class LoginService {
         User currentUser = userRepository.findById(verifiedUser.getId())
                 .orElseThrow(InvalidCredentialsException::new);
 
-        if (!currentUser.isActive() || !currentUser.getPasswordHash().equals(verifiedUser.getPasswordHash())) {
+        if (!currentUser.canAuthenticate() || !currentUser.getPasswordHash().equals(verifiedUser.getPasswordHash())) {
             throw new InvalidCredentialsException();
         }
 

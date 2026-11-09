@@ -1,13 +1,16 @@
 package com.longdnh.onward.identity.infrastructure.configuration;
 
+import com.longdnh.onward.common.constants.ApiPaths;
+import com.longdnh.onward.common.constants.ApiPaths.Auth;
 import com.longdnh.onward.common.Exception.ApiErrorWriter;
 import com.longdnh.onward.common.constants.ApiErrorCodes;
 import com.longdnh.onward.common.constants.ClientMessages;
-import com.longdnh.onward.identity.infrastructure.security.RegistrationRateLimitFilter;
+import com.longdnh.onward.identity.infrastructure.security.PublicAuthRateLimitFilter;
 import com.longdnh.onward.identity.infrastructure.security.SessionJwtAuthenticationConverter;
 import jakarta.servlet.DispatcherType;
 import java.time.Clock;
 import java.time.Duration;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -25,6 +28,20 @@ import org.springframework.security.web.csrf.CsrfTokenRepository;
 
 @Configuration(proxyBeanMethods = false)
 public class SecurityConfiguration {
+
+    /** Token-driven flows: no credentials yet, so they must be reachable without a JWT. */
+    private static final String[] PUBLIC_EMAIL_FLOW_PATHS = {
+            Auth.BASE + Auth.VERIFY_EMAIL,
+            Auth.BASE + Auth.RESEND_VERIFICATION,
+            Auth.BASE + Auth.FORGOT_PASSWORD,
+            Auth.BASE + Auth.RESET_PASSWORD,
+    };
+
+    /** The public endpoints that create rows or send mail; verify/reset consume a secret and need no limit. */
+    private static final Set<String> RATE_LIMITED_PATHS = Set.of(
+            Auth.BASE + Auth.REGISTER,
+            Auth.BASE + Auth.RESEND_VERIFICATION,
+            Auth.BASE + Auth.FORGOT_PASSWORD);
 
     @Bean
     public SecurityFilterChain securityFilterChain(
@@ -46,19 +63,21 @@ public class SecurityConfiguration {
                 .authorizeHttpRequests(
                         authorize -> authorize.dispatcherTypeMatchers(DispatcherType.ERROR)
                                 .permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/auth/csrf")
+                                .requestMatchers(HttpMethod.GET, Auth.BASE + Auth.CSRF)
                                 .permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/auth/register")
+                                .requestMatchers(HttpMethod.POST, Auth.BASE + Auth.REGISTER)
                                 .permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/auth/login")
+                                .requestMatchers(HttpMethod.POST, PUBLIC_EMAIL_FLOW_PATHS)
                                 .permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/auth/refresh")
+                                .requestMatchers(HttpMethod.POST, Auth.BASE + Auth.LOGIN)
                                 .permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/auth/logout")
+                                .requestMatchers(HttpMethod.POST, Auth.BASE + Auth.REFRESH)
+                                .permitAll()
+                                .requestMatchers(HttpMethod.POST, Auth.BASE + Auth.LOGOUT)
                                 .permitAll()
                                 // System-wide role: the filter chain has all the information it needs,
                                 // unlike tenant roles, which depend on the organization in the route.
-                                .requestMatchers("/api/admin/**")
+                                .requestMatchers(ApiPaths.Admin.PATTERN)
                                 .hasRole("SYSTEM_ADMIN")
                                 .anyRequest()
                                 .authenticated())
@@ -79,7 +98,7 @@ public class SecurityConfiguration {
                                     }
                                 }))
                 .addFilterAfter(
-                        new RegistrationRateLimitFilter(clock, errorWriter, maxAttempts,
+                        new PublicAuthRateLimitFilter(clock, errorWriter, RATE_LIMITED_PATHS, maxAttempts,
                                 Duration.ofSeconds(windowSeconds)),
                         CsrfFilter.class)
                 .oauth2ResourceServer(

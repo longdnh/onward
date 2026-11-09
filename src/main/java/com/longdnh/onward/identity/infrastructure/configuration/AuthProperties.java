@@ -27,7 +27,19 @@ public record AuthProperties(
     String issuer,
 
     @NotBlank
-    String audience
+    String audience,
+
+    /** How long an email-verification link stays valid. */
+    @NotNull @DurationMin(inclusive = false)
+    Duration emailVerificationTokenLifetime,
+
+    /** How long a password-reset link stays valid; short, because it grants account takeover. */
+    @NotNull @DurationMin(inclusive = false)
+    Duration passwordResetTokenLifetime,
+
+    /** Minimum gap between two emails of the same purpose to one account; a cheap anti-spam guard. */
+    @NotNull @DurationMin(inclusive = false)
+    Duration emailResendCooldown
 
 ) {
     @AssertTrue (message = "Access-token lifetime and idle timeout must not exceed absolute lifetime")

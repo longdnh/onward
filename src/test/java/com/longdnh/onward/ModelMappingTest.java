@@ -28,7 +28,7 @@ class ModelMappingTest {
     @ParameterizedTest
     @EnumSource(User.UserStatus.class)
     void userMappingPreservesCredentialsStatusAndHistory(User.UserStatus status) {
-        User original = new User(USER, "alice+research@example.test", "encoded-hash", status, null, CREATED, UPDATED);
+        User original = new User(USER, "alice+research@example.test", "encoded-hash", status, null, CREATED, CREATED, UPDATED);
         User restored = UserEntity.fromDomain(original).toDomain();
 
         assertAll(

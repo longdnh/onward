@@ -52,7 +52,7 @@ public class SessionJwtAuthenticationConverter implements Converter<Jwt, Abstrac
                 .orElseThrow(
                         SessionJwtAuthenticationConverter::invalidAuthentication);
 
-        if (!user.isActive()) {
+        if (!user.canAuthenticate()) {
             throw invalidAuthentication();
         }
 

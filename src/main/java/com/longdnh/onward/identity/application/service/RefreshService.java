@@ -105,7 +105,7 @@ public class RefreshService {
         var userCandidate = userRepository.findById(session.getUserId());
 
         if (userCandidate.isEmpty()
-                || !userCandidate.get().isActive()) {
+                || !userCandidate.get().canAuthenticate()) {
             return Optional.empty();
         }
 
