@@ -26,6 +26,7 @@ dependencies {
 	implementation 'com.fasterxml.uuid:java-uuid-generator:5.1.0'
 	implementation 'org.springframework.boot:spring-boot-starter-security-oauth2-resource-server'
 	implementation 'org.springframework.boot:spring-boot-starter-mail'
+	implementation 'org.springframework.boot:spring-boot-starter-amqp'
 	runtimeOnly 'org.bouncycastle:bcprov-jdk18on:1.86'
 	implementation 'org.flywaydb:flyway-database-postgresql'
 	compileOnly 'org.projectlombok:lombok'

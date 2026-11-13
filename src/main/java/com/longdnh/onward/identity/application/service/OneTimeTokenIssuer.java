@@ -19,7 +19,8 @@ import lombok.RequiredArgsConstructor;
 
 /**
  * Issues the raw secret for an email link and stores its hash. Shared by verification and password reset.
- * The caller holds the user row lock and the transaction; the raw token is returned once and never stored.
+ * The caller holds the user row lock and the transaction; the raw token is returned once and this service
+ * stores only its hash (it may still travel to the Notification service through the broker).
  */
 @Component
 @RequiredArgsConstructor
