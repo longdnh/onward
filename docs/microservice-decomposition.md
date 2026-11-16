@@ -1,6 +1,6 @@
 # Microservice decomposition plan
 
-Status: **plan only, nothing implemented.** Agreed on 2026-11-10. The backend is still one Spring Boot application with two modules, `identity` and `tenancy`, sharing one PostgreSQL database.
+Status: plan agreed on 2026-11-10; **step 5 (Notification service in Go) implemented on 2026-11-16**, see 5.1 and 5.3. The backend is still one Spring Boot application with two modules, `identity` and `tenancy`, sharing one PostgreSQL database; auth mails are now sent by the separate Go service through RabbitMQ.
 
 This is a learning project. The goal is to move gradually from a modular monolith to microservices, learning one or two new concepts per step. New features are built as separate services next to the monolith rather than rewriting it first (the *strangler* approach).
 
@@ -120,15 +120,35 @@ Body, identical for both types today:
 
 The exchange is owned and declared by Account. The queue, its binding (`auth.#` or the two keys above), and the dead-letter queue are owned and declared by Notification. Messages published before that queue exists are dropped by the exchange, which is acceptable for mails that can be re-requested.
 
-### 5.3 Notification side — to be written in Go
+### 5.3 Notification side — implemented in Go (2026-11-16)
 
-Responsibilities of the Go service, in the order to build them:
+Repository `onward-notification`, one binary, configured only through environment variables (defaults match `docker-compose.yaml` on localhost; the `notification` service in that file overrides the hostnames). Build and run locally with `go run ./cmd/notification`, or `docker compose up -d --build` from `onward-be`.
 
-1. Connect to RabbitMQ (`amqp091-go`), declare queue `notification.auth-mail` bound to `onward.auth`, consume with manual acknowledgement and a prefetch of a few messages.
-2. Decode the JSON by `type`, compose the mail (its own templates, its own `FRONTEND_BASE_URL`), send it through SMTP (Mailpit locally), then `ack`. A failure before `ack` leaves the message in the queue, so delivery is **at least once**.
-3. **Idempotency:** the same `messageId` may arrive twice (for example, a crash between SMTP send and `ack`). Remember processed IDs and skip repeats.
-4. **Dead-letter queue:** a message that cannot be decoded is `nack`ed without requeue, so it moves to the dead-letter queue instead of being retried forever.
-5. Never log the `token`. Drop messages whose `expiresAt` has already passed.
+Packages, with the import direction `main → rabbit, mail, dedup, config` and `rabbit, mail → event`:
+
+| Package | Owns |
+| --- | --- |
+| `event` | The message contract: the `TokenMail` struct, the two type names, decoding and validation (all fields present, known type). Imports nothing from the other packages. |
+| `rabbit` | Connection, queue and dead-letter declarations, the consume loop. Declares the `Handler` and `Dedup` interfaces it needs; implementations are injected from `main`. |
+| `mail` | Templates (mirroring Account's former composer), SMTP delivery, and the handler that picks the template by type. |
+| `dedup` | Redis adapter: `SET NX EX` to claim a `messageId`, `DEL` to release it. |
+| `config` | Reads `RABBITMQ_URL`, `RABBITMQ_EXCHANGE`, `RABBITMQ_QUEUE`, `RABBITMQ_PREFETCH`, `SMTP_HOST`, `SMTP_PORT`, `MAIL_FROM`, `FRONTEND_BASE_URL`, `REDIS_ADDR`, `DEDUP_TTL`. |
+
+Broker objects declared by Notification: quorum queue `notification.auth-mail` bound to `onward.auth` with `auth.#`, argument `x-dead-letter-exchange` = `onward.auth.dlx`; fanout exchange `onward.auth.dlx`; quorum queue `notification.auth-mail.dlq` bound to it. Queue arguments are immutable on the broker: changing them means deleting the queue first (acceptable in development; production would use a policy instead).
+
+What happens to one delivery, with prefetch 10 and manual acknowledgement:
+
+| Outcome | Action | Reason |
+| --- | --- | --- |
+| Invalid JSON, missing field, unknown type | `nack` without requeue → dead-letter queue | Permanent; a person has to look at it. The `x-death` header records the origin. |
+| `messageId` already claimed in Redis | `ack`, skip | Already handled (6.2: remember first, then send). |
+| `expiresAt` in the past | `ack`, skip | Sending is useless and nobody needs to inspect it. |
+| SMTP or Redis unreachable | release the claim, return, process exits with status 1 | Transient. The message stays unacknowledged and is redelivered after the restart (compose `restart: unless-stopped`). |
+| Mail sent | `ack` | |
+
+Shutdown: `SIGINT`/`SIGTERM` cancel a context that is checked only between messages; the message in flight runs on a context without that cancellation and a 30-second timeout, so it is finished and acknowledged before the process exits with status 0. Unacknowledged prefetched messages return to the queue when the connection closes. The `token` is never logged.
+
+**Known gaps, deliberately left:** a permanent SMTP failure for one message (for example, a rejected address) is treated as transient and would restart the process repeatedly; the fix is a retry loop through the dead-letter queue with a TTL back to the main queue and a cap on the `x-death` count. The dead-letter queue has no TTL and no alerting. No reconnect logic: the process exits and is restarted.
 
 ## 6. Open decisions
 

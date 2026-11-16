@@ -26,11 +26,38 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
   redis:
     image: redis:8-alpine
     container_name: onward-redis
     ports:
       - "6379:6379"
+
+  # Go Notification service: consumes onward.auth from RabbitMQ, sends through Mailpit.
+  # Same binary as `go run ./cmd/notification`; only the hostnames differ from the local defaults.
+  # It exits on infrastructure errors by design and relies on the restart policy.
+  notification:
+    build: ../onward-notification
+    container_name: onward-notification
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      REDIS_ADDR: redis:6379
+      FRONTEND_BASE_URL: http://localhost:5173
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mailpit:
+        condition: service_started
+      redis:
+        condition: service_started
+    restart: unless-stopped
 
 networks:
   postgres_network:
