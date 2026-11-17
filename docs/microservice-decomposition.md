@@ -1,6 +1,6 @@
 # Microservice decomposition plan
 
-Status: plan agreed on 2026-11-10; **step 5 (Notification service in Go) implemented on 2026-11-16**, see 5.1 and 5.3. The backend is still one Spring Boot application with two modules, `identity` and `tenancy`, sharing one PostgreSQL database; auth mails are now sent by the separate Go service through RabbitMQ.
+Status: plan agreed on 2026-11-10; **step 5 (Notification service in Go) implemented on 2026-11-16**, see 5.1 and 5.3; **JWKS endpoint implemented on 2026-11-17** and the authentication model for further services decided, see 4 and 7. The backend is still one Spring Boot application with two modules, `identity` and `tenancy`, sharing one PostgreSQL database; auth mails are now sent by the separate Go service through RabbitMQ.
 
 This is a learning project. The goal is to move gradually from a modular monolith to microservices, learning one or two new concepts per step. New features are built as separate services next to the monolith rather than rewriting it first (the *strangler* approach).
 
@@ -58,7 +58,7 @@ Anything that crosses a service boundary must be language-neutral, because Java 
 
 | Concern | Agreement |
 | --- | --- |
-| Authentication | Each service verifies the RS256 access JWT itself (`iss`, `aud`, `exp`). Account publishes its public keys through a JWKS endpoint instead of distributing PEM files. |
+| Authentication | Each service verifies the RS256 access JWT itself (`iss`, `aud`, `exp`). Account publishes its public keys through a JWKS endpoint instead of distributing PEM files. **Implemented (2026-11-17):** `GET /.well-known/jwks.json`, public, cacheable for 5 minutes. The key pair is held as one JWK whose `kid` is the RFC 7638 thumbprint of the public key; every token header carries that `kid`, and Account verifies its own tokens from the same set, selected by `kid`, exactly as a remote consumer would. Rotation means adding the next key to the set and keeping the old one until its tokens have expired. A consumer in Spring sets `jwk-set-uri`; one in Go uses any JWKS client library. |
 | Event format | JSON with a written schema (JSON Schema or AsyncAPI), or Protobuf/Avro. Each event has a stable, explicit type name. Spring's JSON message converters for Kafka and RabbitMQ add a `__TypeId__` header containing the Java class name by default. This must be disabled, otherwise a Go consumer either breaks or depends on Java class names. |
 | HTTP errors | The current `ApiError` shape and `ApiErrorCodes` become a documented contract (OpenAPI), not shared code. |
 | Tracing | OpenTelemetry with the W3C `traceparent` header, so one request can be followed across services written in different languages. |
@@ -177,6 +177,27 @@ Recommendation: **A**. The link already passes through SMTP servers, the mail pr
 | Broker — **decided (2026-11-11): RabbitMQ** for the Notification step | RabbitMQ deletes a message once it is acknowledged, so the raw token (6.1) does not linger; sending an email is a command for one consumer, which is what a queue is for; fewer concepts to learn at once. | Kafka remains planned for later domain events that several consumers read and that need replay (Project/Task events feeding Notification, Search and audit). Running both brokers is acceptable. |
 | Idempotency store — **decided (2026-11-15): Redis**, processed IDs kept 48 hours | Where Notification remembers processed `messageId`s: in memory (useless, duplicates arrive exactly after a restart); PostgreSQL table with a cleanup job; Redis key per ID with a TTL; SQLite file | Redis is the exception to "PostgreSQL by default" because the need is exactly what `SET NX EX` does: check, write and schedule the expiry in one atomic command, safe with several consumer instances. Losing this data only causes a duplicate mail, so Postgres durability buys nothing. Retention is derived from when a duplicate becomes harmless: a late copy is dropped anyway once `expiresAt` (at most 24 hours) has passed, so 24 hours suffice and 48 give slack. Redis runs in `docker-compose.yaml`; Notification reads `REDIS_ADDR` and `DEDUP_TTL`. |
 | Order of "remember" and "send" — **decided (2026-11-15): remember first, then send** (at-most-once) | Record the ID before sending: a crash in between loses the mail. Send before recording: a crash in between sends it twice. | Same reasoning as the outbox decision: a lost mail can be re-requested, a duplicate confuses the user. The loss window is only a crash between the two steps; when SMTP merely fails, Notification deletes the ID again before exiting, so the redelivery is not treated as a duplicate. |
-| Session checks in other services | Verify the JWT only, accepting that logout, revocation and account disable take effect up to 5 minutes late (access token lifetime); or ask Account on every request; or check once in a gateway | Today `SessionJwtAuthenticationConverter` checks the session and user in the database on every request, which another service cannot do on its own. |
+| Session checks in other services — **decided (2026-11-17): once, in an API gateway, against a denylist that Account maintains in Redis**; see section 7 | Verify the JWT only, accepting that logout, revocation and account disable take effect up to 5 minutes late (access token lifetime); or ask Account on every request; or check once in a gateway | Today `SessionJwtAuthenticationConverter` checks the session and user in the database on every request, which another service cannot do on its own. Asking Account on every request keeps that behaviour but makes Account a runtime dependency of every call, which defeats the split. |
 | How Project/Task learns a user's role in an organization | Call Account on each request; keep a local copy of memberships updated from events; put roles in the JWT | Roles change and a user belongs to many organizations, so roles in the JWT go stale and grow the token. Not discussed yet. |
-| Client entry point | Clients call each service directly, or go through an API gateway | Not discussed yet. |
+| Client entry point — **decided (2026-11-17): an API gateway** | Clients call each service directly, or go through an API gateway | Follows from the session-check decision: the gateway is where the session check runs once. |
+
+## 7. Authentication for every service behind a gateway
+
+Decided 2026-11-17. Authentication today has two layers, both inside Account: the signature and claims of the access token (needs only the public key), and a database check that the session is still active, the user is not disabled, the last activity is recorded and the system role is current (needs Account's `sessions` and `users` tables). A second service can repeat the first layer through JWKS but, by the one-database-per-service rule, never the second. Something has to take over that second layer.
+
+| Option | What a second service does | Cost |
+| --- | --- | --- |
+| Verify the JWT only | First layer only; trusts the claims in the token | Logout, revocation and disable take effect up to the access-token lifetime late (5 minutes); idle timeout cannot be enforced. |
+| Ask Account on every request | Calls an introspection endpoint of Account | Keeps today's semantics, but every service depends on Account's latency and availability for every call. |
+| Check once in a gateway | A gateway in front of all services does the second layer; services behind it only verify the signature | One more component; the gateway still needs session state from somewhere. |
+
+Chosen: the gateway, with the session state supplied as a **denylist in Redis owned by Account**:
+
+- Account writes to Redis when a session ends or is revoked (key by session id) and when a user is disabled (key by user id), with a TTL equal to the access-token lifetime, since after that the token is invalid anyway.
+- The gateway verifies the token through JWKS, then checks that neither the session id nor the subject is denied. A valid request never touches Account.
+- Idle timeout and last activity move to the gateway, which writes the last activity to Redis, because only the gateway sees every request.
+- Services behind the gateway still verify the token signature and claims themselves through JWKS. It is cheap and means a service called directly, bypassing the gateway, does not accept forged tokens. Only the session check is skipped there.
+
+Why this over the alternatives: the direct-call option gives up "logout takes effect immediately", which the current design deliberately provides; the introspection option keeps Account on the hot path of every request. The denylist keeps the guarantee and keeps Account off the hot path. Two processes share one Redis, which bends "one database per service"; it is accepted because Redis here is a cache of decisions whose source of truth stays in Account's PostgreSQL, and losing it only means a revoked token is honoured for at most 5 minutes, the same as the first option.
+
+Not yet decided: the gateway technology (Spring Cloud Gateway is the natural choice to stay in one language), and whether Account itself moves behind the gateway and drops its own database check in favour of the same denylist, or keeps both.
