@@ -65,6 +65,8 @@ public class SecurityConfiguration {
                                 .permitAll()
                                 .requestMatchers(HttpMethod.GET, Auth.BASE + Auth.CSRF)
                                 .permitAll()
+                                .requestMatchers(HttpMethod.GET, ApiPaths.WellKnown.JWKS)
+                                .permitAll()
                                 .requestMatchers(HttpMethod.POST, Auth.BASE + Auth.REGISTER)
                                 .permitAll()
                                 .requestMatchers(HttpMethod.POST, PUBLIC_EMAIL_FLOW_PATHS)

@@ -27,14 +27,28 @@ import org.springframework.security.oauth2.jwt.NimbusJwtDecoder;
 import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 
 import com.longdnh.onward.common.constants.ClientMessages;
+import com.nimbusds.jose.JOSEException;
+import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.jwk.JWKSet;
+import com.nimbusds.jose.jwk.KeyUse;
+import com.nimbusds.jose.jwk.RSAKey;
+import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
+import com.nimbusds.jose.proc.SecurityContext;
 
 @Configuration(proxyBeanMethods = false)
 public class JwtConfiguration {
 
+    /**
+     * The signing key pair as a JWK with a stable key id (the RFC 7638 thumbprint of the public key).
+     * The encoder selects the key from this set and writes its {@code kid} into every token header; the
+     * JWKS endpoint publishes the public half so other services can verify tokens without a PEM file.
+     * Only one key is in the set today; rotation adds the next key here and keeps the old one until its
+     * tokens have expired.
+     */
     @Bean
-    public JwtEncoder jwtEncoder(
+    public JWKSet jwkSet(
             @Value("${app.auth.jwt-private-key}") Resource privateKeyResource,
-            @Value("${app.auth.jwt-public-key}") Resource publicKeyResource) throws IOException {
+            @Value("${app.auth.jwt-public-key}") Resource publicKeyResource) throws IOException, JOSEException {
         RSAPrivateKey privateKey;
         RSAPublicKey publicKey;
 
@@ -55,26 +69,28 @@ public class JwtConfiguration {
                     "JWT public and private keys do not match");
         }
 
-        return NimbusJwtEncoder.withKeyPair(publicKey, privateKey)
+        RSAKey signingKey = new RSAKey.Builder(publicKey)
+                .privateKey(privateKey)
+                .keyUse(KeyUse.SIGNATURE)
+                .algorithm(JWSAlgorithm.RS256)
+                .keyIDFromThumbprint()
                 .build();
+
+        return new JWKSet(signingKey);
     }
 
     @Bean
-    public JwtDecoder jwtDecoder(
-            @Value("${app.auth.jwt-public-key}") Resource publicKeyResource,
-            AuthProperties properties,
-            Clock clock) throws IOException {
-        RSAPublicKey publicKey;
+    public JwtEncoder jwtEncoder(JWKSet jwkSet) {
+        return new NimbusJwtEncoder(new ImmutableJWKSet<SecurityContext>(jwkSet));
+    }
 
-        try (var input = publicKeyResource.getInputStream()) {
-            publicKey = Objects.requireNonNull(
-                    RsaKeyConverters.x509().convert(input),
-                    "RSA public key is required");
-        }
-
+    @Bean
+    public JwtDecoder jwtDecoder(JWKSet jwkSet, AuthProperties properties, Clock clock) {
+        // Verified from the same in-memory set the JWKS endpoint serves, selected by kid like a remote
+        // consumer would, so Account proves the published keys are the ones that sign its tokens.
         NimbusJwtDecoder decoder = NimbusJwtDecoder
-                .withPublicKey(publicKey)
-                .signatureAlgorithm(SignatureAlgorithm.RS256)
+                .withJwkSource(new ImmutableJWKSet<>(jwkSet))
+                .jwsAlgorithm(SignatureAlgorithm.RS256)
                 .build();
 
         JwtTimestampValidator timestamps = new JwtTimestampValidator(Duration.ZERO);
