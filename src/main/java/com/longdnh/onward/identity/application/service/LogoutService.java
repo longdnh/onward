@@ -5,6 +5,10 @@ import java.time.Instant;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.context.ApplicationEventPublisher;
+
+import com.longdnh.onward.identity.application.event.SessionRevoked;
+
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.longdnh.onward.identity.application.port.AuthSessionRepository;
@@ -20,6 +24,7 @@ public class LogoutService {
     private final AuthSessionRepository authSessionRepository;
     private final RefreshTokenGenerator refreshTokenGenerator;
     private final TransactionTemplate transactionTemplate;
+    private final ApplicationEventPublisher events;
     private final Clock clock;
 
     public void logout(String rawToken) {
@@ -47,6 +52,7 @@ public class LogoutService {
                     ? session.get().getLastSeenAt()
                     : now;
             authSessionRepository.revoke(session.get().getId(), revokedAt);
+            events.publishEvent(new SessionRevoked(session.get().getId()));
 
         });
 

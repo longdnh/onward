@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.longdnh.onward.common.events.UserDisabledEvent;
+import com.longdnh.onward.identity.application.event.UserTokensRevoked;
 import com.longdnh.onward.identity.application.exception.InvalidCredentialsException;
 import com.longdnh.onward.identity.application.exception.OwnershipMustBeTransferredException;
 import com.longdnh.onward.identity.application.exception.SelfActionNotAllowedException;
@@ -91,6 +92,7 @@ public class AccountService {
         Instant now = clock.instant();
         User disabled = userRepository.save(user.disable(now));
         authSessionRepository.revokeAllActiveByUserId(user.getId(), now);
+        events.publishEvent(new UserTokensRevoked(user.getId(), now));
         events.publishEvent(new UserDisabledEvent(user.getId()));
         return disabled;
     }

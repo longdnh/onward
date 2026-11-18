@@ -109,7 +109,8 @@ public class IdentityConfiguration {
             AccessTokenIssuer accessTokenIssuer,
             IdGenerator idGenerator,
             Clock clock,
-            PlatformTransactionManager transactionManager) {
+            PlatformTransactionManager transactionManager,
+            ApplicationEventPublisher events) {
         return new RefreshService(
                 userRepository,
                 authSessionRepository,
@@ -120,7 +121,8 @@ public class IdentityConfiguration {
                 clock,
                 authProperties.accessTokenLifetime(),
                 authProperties.idleTimeout(),
-                new TransactionTemplate(transactionManager));
+                new TransactionTemplate(transactionManager),
+                events);
     }
 
     @Bean
@@ -129,9 +131,10 @@ public class IdentityConfiguration {
             AuthSessionRepository authSessionRepository,
             RefreshTokenGenerator refreshTokenGenerator,
             PlatformTransactionManager transactionManager,
+            ApplicationEventPublisher events,
             Clock clock) {
         return new LogoutService(refreshTokenRepository, authSessionRepository, refreshTokenGenerator,
-                new TransactionTemplate(transactionManager), clock);
+                new TransactionTemplate(transactionManager), events, clock);
     }
 
     @Bean
