@@ -200,4 +200,42 @@ Chosen: the gateway, with the session state supplied as a **denylist in Redis ow
 
 Why this over the alternatives: the direct-call option gives up "logout takes effect immediately", which the current design deliberately provides; the introspection option keeps Account on the hot path of every request. The denylist keeps the guarantee and keeps Account off the hot path. Two processes share one Redis, which bends "one database per service"; it is accepted because Redis here is a cache of decisions whose source of truth stays in Account's PostgreSQL, and losing it only means a revoked token is honoured for at most 5 minutes, the same as the first option.
 
-Not yet decided: the gateway technology (Spring Cloud Gateway is the natural choice to stay in one language), and whether Account itself moves behind the gateway and drops its own database check in favour of the same denylist, or keeps both.
+### 7.1 Gateway skeleton — implemented (2026-11-18)
+
+Technology decided 2026-11-18: **Spring Cloud Gateway (WebFlux)**, Spring Cloud 2025.1.x on Boot 4.1. Considered: the Server MVC variant (same programming model as Account, fewer features and examples), a hand-written Go reverse proxy (small and instructive, but it teaches writing a proxy rather than using a gateway, and mixes proxy bugs with design mistakes while the design is still moving), and an off-the-shelf product such as Kong, Traefik or Envoy (the denylist check would need a plugin in yet another ecosystem). The WebFlux variant is chosen because the only custom logic is the denylist check, a filter of a few dozen lines, and it brings a Redis rate limiter that can later replace `PublicAuthRateLimitFilter`. Rewriting the gateway in Go once its behaviour is settled is a reasonable later exercise; it would replace this one, not run beside it.
+
+Repository `onward-gateway`, port 8081 while Account stays on 8080; clients keep calling Account directly until the gateway does everything they need. What it does today:
+
+- One route: `/api/**` and `/.well-known/**` to Account.
+- Verifies the access token through Account's JWKS (`gateway.auth.jwk-set-uri`), with the same rules as Account: RS256, issuer, audience, expiry required, no clock skew. Keys are cached; an unknown `kid` triggers one refetch, which is how rotation is picked up.
+- A configured list of public paths (`gateway.auth.public-paths`) needs no token: Account's public auth flows and the JWKS document. Everything else is rejected with 401 before reaching a service. Every service behind the gateway therefore has to declare its public routes to the gateway; that is inherent in the gateway doing authentication.
+- 401 and 403 use Account's `ApiError` JSON shape, so clients see one error contract whoever rejects them.
+- CSRF is not enforced by the gateway; it forwards cookies and headers, and Account keeps enforcing it on its cookie-backed endpoints. Verified end to end: register, verify, login, refresh (cookie), logout and `/api/auth/me` through the gateway behave as when called directly.
+
+Not done yet, in order: the denylist and idle-timeout check in the gateway (7.3), and the decision whether Account drops its own per-request database check once it sits behind the gateway. Known consequence to handle before clients switch to the gateway: `PublicAuthRateLimitFilter` keys on the connection address and will see only the gateway's address, so either Account trusts `X-Forwarded-For` from the gateway only, or the rate limit moves to the gateway.
+
+### 7.2 Denylist written by Account — implemented (2026-11-18)
+
+Decided 2026-11-18: Account writes the denylist **directly into Redis** rather than publishing an event for the gateway to consume. The denylist exists to make a revocation visible immediately; putting a broker between the two would add latency and, with the gateway down, leave revocations waiting in a queue. The cost is a key format shared by two services, written down here as a contract like the message contract in 5.2. Also decided: the gateway is **fail-open** when Redis is unreachable. It then falls back to verifying the token alone, so a revoked token is honoured for at most the access-token lifetime, the same loss as the "verify the JWT only" option in section 7, while a fail-closed gateway would make Redis a single point of failure for every request.
+
+Key contract, Redis database 0:
+
+| Key | Value | Expiry | Meaning for the gateway |
+| --- | --- | --- | --- |
+| `denied:session:<sessionId>` | `1` | access-token lifetime (5 minutes) | Reject every token whose `sid` claim equals `<sessionId>`. |
+| `denied:user:<userId>` | Unix time in seconds of the revocation | access-token lifetime (5 minutes) | Reject every token whose `sub` claim equals `<userId>` and whose `iat` is **not after** that instant. A session opened later carries a later `iat` and passes, so a user who resets their password can log in again at once. |
+
+The expiry follows from the token lifetime: after it, every token issued before the revocation has expired on its own, so the entry has nothing left to block. Any service that changes the access-token lifetime must keep both in step.
+
+Where Account writes, all inside the identity module:
+
+| Trigger | Entry |
+| --- | --- |
+| Logout | session |
+| Refresh-token reuse detected (the session is revoked as compromised) | session |
+| Password reset (all sessions revoked) | user |
+| Account disabled, by the user or by an admin (all sessions revoked) | user |
+
+Mechanics: the service publishes an application event (`SessionRevoked`, `UserTokensRevoked`) inside the transaction that revokes in PostgreSQL; a listener runs **after commit** and calls the `SessionDenylist` port, whose Redis adapter issues one `SET ... EX`. After commit, so that a rolled-back revocation never blocks a live session; synchronous, unlike the mail listener, so the entry exists before the client receives the response. A failed write is logged and swallowed: the revocation is already durable in PostgreSQL, only the early rejection at the gateway is lost, for at most one token lifetime. Redis runs from `docker-compose.yaml`; Account reads `spring.data.redis.*` from the local profile with a 500 ms command timeout, so a hung Redis cannot hold a logout request.
+
+Storage is bounded by traffic within the expiry window, not by time: the number of logouts, resets and disables in five minutes, at roughly a hundred bytes each. Account verifies its own tokens against the database as before; it does not read the denylist.
