@@ -84,7 +84,7 @@ Messages are maintained in `common.constants.ClientMessages`, and response codes
 
 Protected routes currently return `401 UNAUTHENTICATED` because login/JWT authentication is not implemented. CSRF is checked before rate limiting and controller input handling, so a request with both invalid JSON and missing CSRF receives `403` first.
 
-The registration limiter permits 10 attempts per connection IP in a fixed one-hour window. Both successful and unsuccessful requests count once they pass CSRF. Limits reset on backend restart. Configuration properties are `app.security.registration.max-attempts` and `app.security.registration.window-seconds`. It uses the connection address and does not trust incoming `X-Forwarded-For` values. If a reverse proxy is added, client-address handling needs an explicitly trusted proxy configuration.
+Rate limiting of registration is enforced by the gateway, not by Account (see `microservice-decomposition.md`, 7.4): 10 requests per client per path per hour as a token bucket in Redis, shared by all gateway instances, answered with `429 RATE_LIMITED` and `Retry-After`. Account itself no longer limits, so it must not be reachable by clients directly in production.
 
 ## 5. Follow the code
 
