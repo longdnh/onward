@@ -15,7 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Forwards auth events to the AuthNotifier only once their transaction committed: a rolled-back registration
  * never produces a link to a token that does not exist. Fire-and-forget by decision (see
- * docs/microservice-decomposition.md, 6.2): if the mail or the broker fails here the account and token still
+ * docs/en/microservice-decomposition.md, 6.2): if the mail or the broker fails here the account and token still
  * exist and the user can ask for a resend. A crash between commit and this listener loses the notification;
  * an outbox is reserved for events whose loss would be a bug. Nothing here logs the raw token.
  */

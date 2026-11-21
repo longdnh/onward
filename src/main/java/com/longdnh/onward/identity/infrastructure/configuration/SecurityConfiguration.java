@@ -86,7 +86,7 @@ public class SecurityConfiguration {
                                     }
                                 }))
                 // Per-client rate limiting of the public auth endpoints lives in the gateway, which is the
-                // only place that still sees the client address (docs/microservice-decomposition.md, 7.4).
+                // only place that still sees the client address (docs/en/microservice-decomposition.md, 7.4).
                 .oauth2ResourceServer(
                         oauth2 -> oauth2
                                 .jwt(jwt -> jwt.decoder(jwtDecoder)

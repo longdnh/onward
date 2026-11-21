@@ -1,5 +1,7 @@
 # Microservice decomposition plan
 
+Vietnamese translation: [../vi/microservice-decomposition.md](../vi/microservice-decomposition.md).
+
 Status: plan agreed on 2026-11-10; **step 5 (Notification service in Go) implemented on 2026-11-16**, see 5.1 and 5.3; **JWKS endpoint implemented on 2026-11-17** and the authentication model for further services decided, see 4 and 7. The backend is still one Spring Boot application with two modules, `identity` and `tenancy`, sharing one PostgreSQL database; auth mails are now sent by the separate Go service through RabbitMQ.
 
 This is a learning project. The goal is to move gradually from a modular monolith to microservices, learning one or two new concepts per step. New features are built as separate services next to the monolith rather than rewriting it first (the *strangler* approach).

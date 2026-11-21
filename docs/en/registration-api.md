@@ -1,5 +1,7 @@
 # Calling the registration API
 
+Vietnamese translation: [../vi/registration-api.md](../vi/registration-api.md).
+
 Implemented endpoints:
 
 | Endpoint | Purpose |

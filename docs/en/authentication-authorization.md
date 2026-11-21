@@ -1,5 +1,7 @@
 # Simple multi-tenant authentication and authorization
 
+Vietnamese translation: [../vi/authentication-authorization.md](../vi/authentication-authorization.md).
+
 Status: registration and CSRF HTTP endpoints, registration rate limiting, the registration service and input policy, UUIDv7 generation, password hashing, and user persistence are implemented. Login, refresh, logout, and tenant-management APIs remain planned. See the [registration API walkthrough](registration-api.md) for local usage.
 
 Authentication uses a planned combination of access JWTs, application-owned sessions, and rotating refresh tokens. Their [domain models](data-and-domain-model.md#authsession--one-login) are defined. The implemented CSRF cookie does not represent a login session; Spring Security does not persist authentication in servlet `HttpSession`.

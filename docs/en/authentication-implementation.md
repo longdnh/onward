@@ -1,5 +1,7 @@
 # Authentication implementation guide
 
+Vietnamese translation: [../vi/authentication-implementation.md](../vi/authentication-implementation.md).
+
 Status: proposed implementation for the user to follow. Registration and CSRF already work in the code; login, JWT authentication, refresh, and logout are not complete. Domain models `AuthSession` and `RefreshToken` exist. Repository interfaces being added do not supply persistence by themselves. This guide does not add executable application code. Automated tests remain deferred at the user's request.
 
 The [authentication specification](authentication-authorization.md) defines the API and tenant rules. This guide explains implementation decisions and request flows.

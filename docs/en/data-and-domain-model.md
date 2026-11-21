@@ -1,5 +1,7 @@
 # Data and domain models
 
+Vietnamese translation: [../vi/data-and-domain-model.md](../vi/data-and-domain-model.md).
+
 This is the model foundation for the generic multi-tenant authentication backend described in [the authentication design](authentication-authorization.md). A global user connects to organizations through memberships. Authentication also has a login session and the refresh tokens issued for that session.
 
 Domain classes, JPA mappings, and the initial Flyway migration are defined for users, organizations, and memberships. User persistence, the registration service and HTTP endpoint, CSRF support, registration throttling, UUIDv7 generation, and password hashing are implemented. `AuthSession` and `RefreshToken` currently have domain models only; their persistence mappings and tables are not implemented. Remaining application services, repositories, HTTP endpoints, and refresh/access-token generation are separate implementation steps.
