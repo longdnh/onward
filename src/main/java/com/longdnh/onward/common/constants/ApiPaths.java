@@ -13,6 +13,14 @@ public final class ApiPaths {
     private ApiPaths() {
     }
 
+    /** Discovery documents outside the API prefix, at the locations clients expect by convention. */
+    public static final class WellKnown {
+        public static final String JWKS = "/.well-known/jwks.json";
+
+        private WellKnown() {
+        }
+    }
+
     /** Public authentication and account self-service. */
     public static final class Auth {
         public static final String BASE = API + "/auth";

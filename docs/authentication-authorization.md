@@ -98,7 +98,7 @@ The [authentication implementation guide](authentication-implementation.md) desc
 
 Use a host-only refresh cookie with `HttpOnly`, `Secure`, and `SameSite=Lax`. Access JWTs are sent in the `Authorization: Bearer` header. Refresh-token generation, JWT signing and validation, session persistence, and these endpoints are not yet implemented. Form login, HTTP Basic, and Spring's default logout endpoint are disabled.
 
-Planned login throttling: 5 failed attempts per identifier and 30 per IP in 15 minutes, counting unknown identifiers too. Implemented registration throttling: 10 requests per connection IP in a fixed one-hour window, counted after CSRF succeeds and before JSON binding. Responses use `429 RATE_LIMITED` with `Retry-After`. Configure `app.security.registration.max-attempts` and `app.security.registration.window-seconds`. The limiter is in memory, resets on restart, and bounds tracked clients at 10,000; a new client is temporarily rejected if that capacity is full. It does not read caller-supplied forwarded-IP headers. These are project choices; multiple backend instances would need shared limits.
+Planned login throttling: 5 failed attempts per identifier and 30 per IP in 15 minutes, counting unknown identifiers too. Implemented throttling of register, resend-verification and forgot-password: 10 requests per client per path per hour, enforced by the gateway as a token bucket in Redis (shared by all gateway instances), answered with `429 RATE_LIMITED` and `Retry-After`. It keys on the connection address at the gateway and ignores forwarded-IP headers. Account no longer limits these endpoints itself; see `microservice-decomposition.md`, 7.4.
 
 ### CSRF
 

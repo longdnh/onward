@@ -9,6 +9,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 import com.longdnh.onward.identity.application.RegistrationPolicy;
 import com.longdnh.onward.identity.application.event.PasswordResetRequested;
+import com.longdnh.onward.identity.application.event.UserTokensRevoked;
 import com.longdnh.onward.identity.application.exception.InvalidTokenException;
 import com.longdnh.onward.identity.application.port.AuthSessionRepository;
 import com.longdnh.onward.identity.application.port.OneTimeTokenGenerator;
@@ -92,5 +93,6 @@ public class PasswordResetService {
         // Completing a reset proves mailbox ownership as well, so an unverified flag is cleared too.
         userRepository.save(user.changePassword(newPasswordHash, now).verifyEmail(now));
         sessionRepository.revokeAllActiveByUserId(user.getId(), now);
+        events.publishEvent(new UserTokensRevoked(user.getId(), now));
     }
 }

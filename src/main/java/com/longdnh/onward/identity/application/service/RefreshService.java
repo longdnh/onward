@@ -8,6 +8,10 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Pattern;
 
+import org.springframework.context.ApplicationEventPublisher;
+
+import com.longdnh.onward.identity.application.event.SessionRevoked;
+
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.longdnh.onward.identity.application.exception.InvalidRefreshTokenException;
@@ -37,6 +41,7 @@ public class RefreshService {
     private final Duration accessTokenLifetime;
     private final Duration idleTimeout;
     private final TransactionTemplate transactionTemplate;
+    private final ApplicationEventPublisher events;
 
     public RefreshResult refresh(String rawRefreshToken) {
         if (rawRefreshToken == null
@@ -92,6 +97,7 @@ public class RefreshService {
                     : now;
 
             sessionRepository.revoke(session.getId(), revokedAt);
+            events.publishEvent(new SessionRevoked(session.getId()));
 
             // Trả kết quả bình thường để transaction commit việc thu hồi.
             return Optional.empty();

@@ -5,12 +5,8 @@ import com.longdnh.onward.common.constants.ApiPaths.Auth;
 import com.longdnh.onward.common.Exception.ApiErrorWriter;
 import com.longdnh.onward.common.constants.ApiErrorCodes;
 import com.longdnh.onward.common.constants.ClientMessages;
-import com.longdnh.onward.identity.infrastructure.security.PublicAuthRateLimitFilter;
 import com.longdnh.onward.identity.infrastructure.security.SessionJwtAuthenticationConverter;
 import jakarta.servlet.DispatcherType;
-import java.time.Clock;
-import java.time.Duration;
-import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,7 +19,6 @@ import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfException;
-import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.csrf.CsrfTokenRepository;
 
 @Configuration(proxyBeanMethods = false)
@@ -37,19 +32,10 @@ public class SecurityConfiguration {
             Auth.BASE + Auth.RESET_PASSWORD,
     };
 
-    /** The public endpoints that create rows or send mail; verify/reset consume a secret and need no limit. */
-    private static final Set<String> RATE_LIMITED_PATHS = Set.of(
-            Auth.BASE + Auth.REGISTER,
-            Auth.BASE + Auth.RESEND_VERIFICATION,
-            Auth.BASE + Auth.FORGOT_PASSWORD);
-
     @Bean
     public SecurityFilterChain securityFilterChain(
-            HttpSecurity http, ApiErrorWriter errorWriter, Clock clock,
-            @Value("${app.security.csrf.secure-cookie:true}") boolean secureCookie,
-            CsrfTokenRepository csrfTokenRepository,
-            @Value("${app.security.registration.max-attempts:10}") int maxAttempts,
-            @Value("${app.security.registration.window-seconds:3600}") long windowSeconds, JwtDecoder jwtDecoder,
+            HttpSecurity http, ApiErrorWriter errorWriter,
+            CsrfTokenRepository csrfTokenRepository, JwtDecoder jwtDecoder,
             SessionJwtAuthenticationConverter sessionJwtAuthenticationConverter)
             throws Exception {
 
@@ -64,6 +50,8 @@ public class SecurityConfiguration {
                         authorize -> authorize.dispatcherTypeMatchers(DispatcherType.ERROR)
                                 .permitAll()
                                 .requestMatchers(HttpMethod.GET, Auth.BASE + Auth.CSRF)
+                                .permitAll()
+                                .requestMatchers(HttpMethod.GET, ApiPaths.WellKnown.JWKS)
                                 .permitAll()
                                 .requestMatchers(HttpMethod.POST, Auth.BASE + Auth.REGISTER)
                                 .permitAll()
@@ -97,10 +85,8 @@ public class SecurityConfiguration {
                                                 ClientMessages.ACCESS_DENIED);
                                     }
                                 }))
-                .addFilterAfter(
-                        new PublicAuthRateLimitFilter(clock, errorWriter, RATE_LIMITED_PATHS, maxAttempts,
-                                Duration.ofSeconds(windowSeconds)),
-                        CsrfFilter.class)
+                // Per-client rate limiting of the public auth endpoints lives in the gateway, which is the
+                // only place that still sees the client address (docs/microservice-decomposition.md, 7.4).
                 .oauth2ResourceServer(
                         oauth2 -> oauth2
                                 .jwt(jwt -> jwt.decoder(jwtDecoder)
