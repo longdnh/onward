@@ -28,7 +28,7 @@ Năm chỗ dưới đây phủ hết mọi quyết định hệ thống đưa ra
 
 | Câu hỏi | File và dòng | Nhìn vào gì khi dừng |
 | --- | --- | --- |
-| Gateway có chấp nhận claim của token không? | gateway `SecurityConfiguration.java`, dòng `boolean valid = ...` trong claims validator | `jwt.getClaims()`, `now`, `expiresAt` |
+| Gateway có chấp nhận audience của token không? | gateway `SecurityConfiguration.java:53`, lambda `values -> values != null && ...` (dòng ngay trên chỉ dựng validator lúc khởi động, không bao giờ dừng khi có request) | `values`: mảng `aud` trong token |
 | Session này có trong denylist không? | gateway `SessionDenylistFilter.java:72` (dòng `.map(values -> ...)`) | `values` là list hai phần tử: ô session và ô user, `null` nếu không có; `issuedAt` |
 | Redis chết thì chuyện gì xảy ra? | gateway `SessionDenylistFilter.java:75` (`onErrorResume`) | `exception`: TimeoutException hoặc lỗi kết nối |
 | Client này có bị rate limit không? | gateway `PublicAuthRateLimitFilter.java:50` (`doOnNext`) | `key`, `response.isAllowed()`, `response.getHeaders()` (số token còn lại) |

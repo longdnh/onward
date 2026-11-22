@@ -28,7 +28,7 @@ Five places cover every decision the system makes about a request. Put a breakpo
 
 | Question | File and line | What to look at when it stops |
 | --- | --- | --- |
-| Did the gateway accept the token's claims? | gateway `SecurityConfiguration.java`, the `boolean valid = ...` line in the claims validator | `jwt.getClaims()`, `now`, `expiresAt` |
+| Did the gateway accept the token's audience? | gateway `SecurityConfiguration.java:53`, the `values -> values != null && ...` lambda (the line above it only builds the validator at startup and never stops on a request) | `values`: the `aud` array of the token |
 | Is this session on the denylist? | gateway `SessionDenylistFilter.java:72` (the `.map(values -> ...)` line) | `values` is a list of two: the session entry and the user entry, `null` when absent; `issuedAt` |
 | What did Redis do when it was down? | gateway `SessionDenylistFilter.java:75` (`onErrorResume`) | `exception`: TimeoutException or a connection error |
 | Was this client rate limited? | gateway `PublicAuthRateLimitFilter.java:50` (`doOnNext`) | `key`, `response.isAllowed()`, `response.getHeaders()` (tokens remaining) |
