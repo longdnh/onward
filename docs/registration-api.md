@@ -11,6 +11,17 @@ Registration creates an account with no memberships and does not log the user in
 
 ## 1. Start the local backend
 
+The `local` profile signs access tokens with an RSA key pair read from `~/.config/onward/jwt/`. The keys are kept out of the repository, so generate them once per machine. `openssl` is included in `shell.nix`.
+
+```bash
+mkdir -p ~/.config/onward/jwt && chmod 700 ~/.config/onward/jwt
+openssl genpkey -algorithm RSA -pkeyopt rsa_keygen_bits:2048 -out ~/.config/onward/jwt/private.pem
+openssl pkey -in ~/.config/onward/jwt/private.pem -pubout -out ~/.config/onward/jwt/public.pem
+chmod 600 ~/.config/onward/jwt/private.pem
+```
+
+Without these files, startup fails while creating the `jwkSet` bean.
+
 With the project's PostgreSQL connection and Docker setup ready, run:
 
 ```bash
