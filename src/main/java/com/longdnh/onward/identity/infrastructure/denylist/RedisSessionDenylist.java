@@ -14,7 +14,7 @@ import com.longdnh.onward.identity.infrastructure.configuration.AuthProperties;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Key contract shared with the gateway (docs/microservice-decomposition.md, 7.2):
+ * Key contract shared with the gateway (docs/en/microservice-decomposition.md, 7.2):
  * <ul>
  * <li>{@code denied:session:<sessionId>} = "1": reject any token whose {@code sid} matches.</li>
  * <li>{@code denied:user:<userId>} = epoch seconds: reject any token whose {@code sub} matches and whose

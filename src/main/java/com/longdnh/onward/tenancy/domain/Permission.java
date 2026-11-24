@@ -1,6 +1,6 @@
 package com.longdnh.onward.tenancy.domain;
 
-/** One row of the action table in docs/authentication-authorization.md §5 (single-owner model). */
+/** One row of the action table in docs/en/authentication-authorization.md §5 (single-owner model). */
 public enum Permission {
     READ_ORGANIZATION,
     UPDATE_ORGANIZATION,
