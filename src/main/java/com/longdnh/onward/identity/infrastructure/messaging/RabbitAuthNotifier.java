@@ -33,7 +33,7 @@ import tools.jackson.databind.json.JsonMapper;
  *
  * <p>Persistent delivery means the broker writes the message to disk before routing it, so a broker restart
  * does not lose it. There are no publisher confirms: a broker outage at publish time loses the notification,
- * which is the accepted trade-off of publishing after commit (docs/microservice-decomposition.md, 6.2).
+ * which is the accepted trade-off of publishing after commit (docs/en/microservice-decomposition.md, 6.2).
  */
 @Component
 @ConditionalOnProperty(name = "app.mail.mode", havingValue = "rabbit")

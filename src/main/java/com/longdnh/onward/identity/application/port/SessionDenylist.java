@@ -8,7 +8,7 @@ import java.util.UUID;
  * the source of truth for sessions; this is a short-lived copy of the revocations, kept only as long as
  * an access token lives. Implementations must be called after commit (see SessionDenylistListener) and
  * must not throw on an unreachable store: a failed write only means a revoked token is honoured until it
- * expires, which docs/microservice-decomposition.md section 7 accepts.
+ * expires, which docs/en/microservice-decomposition.md section 7 accepts.
  */
 public interface SessionDenylist {
 

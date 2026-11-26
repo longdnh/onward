@@ -1,6 +1,6 @@
 # Microservice decomposition plan
 
-Status: plan agreed on 2026-11-10; **step 5 (Notification service in Go) implemented on 2026-11-16**, see 5.1 and 5.3; **JWKS endpoint implemented on 2026-11-17** and the authentication model for further services decided, see 4 and 7. The backend is still one Spring Boot application with two modules, `identity` and `tenancy`, sharing one PostgreSQL database; auth mails are now sent by the separate Go service through RabbitMQ.
+Status: plan agreed on 2026-11-10; **step 5 (Notification service in Go) implemented on 2026-11-16**, see 5.1 and 5.3; **JWKS endpoint implemented on 2026-11-17** and the authentication model for further services decided, see 4 and 7. The backend is still one Spring Boot application with two modules, `identity` and `tenancy`, sharing one PostgreSQL database; auth mails are now sent by the separate Go service through RabbitMQ. **Next topic: the Incident service**, planned in [incident-service.md](incident-service.md) (draft, 2026-11-24); the business domain changed on that date, see section 2.
 
 This is a learning project. The goal is to move gradually from a modular monolith to microservices, learning one or two new concepts per step. New features are built as separate services next to the monolith rather than rewriting it first (the *strangler* approach).
 
@@ -23,21 +23,21 @@ Things that already help the split:
 
 ## 2. Business domain
 
-The application had no business domain. The chosen domain is **task and project management** (Trello-like), built on the existing organization, membership and role model: projects belong to an organization, and tasks are worked on by its members. The detailed domain model is not designed yet.
+The application had no business domain. The domain chosen on 2026-11-10 was task and project management (Trello-like). **Revised 2026-11-24: the domain is incident management and on-call** (PagerDuty-like), built on the existing organization, membership and role model: monitored services, alerts and incidents belong to an organization, and its members are paged and escalated to according to schedules and policies. It was preferred because it has real rules (state machine, timers, escalation), gives every planned infrastructure piece a reason to exist, can monitor this very stack as a demo, and has concrete AI use cases. The domain model is designed in [incident-service.md](incident-service.md).
 
 ## 3. Target services
 
 | Service | Responsibility | Technology | Data owned |
 | --- | --- | --- | --- |
 | **Account** | Registration, login, sessions, refresh tokens, email verification, password reset, organizations, memberships, roles, system admins | Java / Spring (the current application) | `users`, sessions, tokens, `organizations`, `memberships` |
-| **Project/Task** | Projects, tasks, assignment, comments, task permissions | Java / Spring, PostgreSQL | Its own database |
+| **Incident** (was Project/Task until 2026-11-24) | Monitored services, integrations, alert ingest, incidents and timelines, escalation policies, on-call schedules, pages, postmortems | Java / Spring, PostgreSQL | Its own database, plus a read model of memberships fed by Account's events |
 | **Notification** | Sending email; later realtime push (WebSocket or SSE) | **Go** | Its own state only (for example, processed message IDs) |
 | **Search** (optional, later) | Full-text task search fed by events | OpenSearch | A read model rebuilt from events |
 
 ```mermaid
 flowchart LR
     C[Client] --> A[Account service<br/>Java]
-    C --> T[Project/Task service<br/>Java]
+    C --> T[Incident service<br/>Java]
     A -- events --> B[(Message broker)]
     T -- events --> B
     B --> N[Notification service<br/>Go]
@@ -178,7 +178,7 @@ Recommendation: **A**. The link already passes through SMTP servers, the mail pr
 | Idempotency store — **decided (2026-11-15): Redis**, processed IDs kept 48 hours | Where Notification remembers processed `messageId`s: in memory (useless, duplicates arrive exactly after a restart); PostgreSQL table with a cleanup job; Redis key per ID with a TTL; SQLite file | Redis is the exception to "PostgreSQL by default" because the need is exactly what `SET NX EX` does: check, write and schedule the expiry in one atomic command, safe with several consumer instances. Losing this data only causes a duplicate mail, so Postgres durability buys nothing. Retention is derived from when a duplicate becomes harmless: a late copy is dropped anyway once `expiresAt` (at most 24 hours) has passed, so 24 hours suffice and 48 give slack. Redis runs in `docker-compose.yaml`; Notification reads `REDIS_ADDR` and `DEDUP_TTL`. |
 | Order of "remember" and "send" — **decided (2026-11-15): remember first, then send** (at-most-once) | Record the ID before sending: a crash in between loses the mail. Send before recording: a crash in between sends it twice. | Same reasoning as the outbox decision: a lost mail can be re-requested, a duplicate confuses the user. The loss window is only a crash between the two steps; when SMTP merely fails, Notification deletes the ID again before exiting, so the redelivery is not treated as a duplicate. |
 | Session checks in other services — **decided (2026-11-17): once, in an API gateway, against a denylist that Account maintains in Redis**; see section 7 | Verify the JWT only, accepting that logout, revocation and account disable take effect up to 5 minutes late (access token lifetime); or ask Account on every request; or check once in a gateway | Today `SessionJwtAuthenticationConverter` checks the session and user in the database on every request, which another service cannot do on its own. Asking Account on every request keeps that behaviour but makes Account a runtime dependency of every call, which defeats the split. |
-| How Project/Task learns a user's role in an organization | Call Account on each request; keep a local copy of memberships updated from events; put roles in the JWT | Roles change and a user belongs to many organizations, so roles in the JWT go stale and grow the token. Not discussed yet. |
+| How the Incident service learns a user's role in an organization | Call Account on each request; keep a local copy of memberships updated from events; put roles in the JWT | Roles change and a user belongs to many organizations, so roles in the JWT go stale and grow the token. Options weighed and a local copy fed by outbox events recommended in [incident-service.md](incident-service.md), section 3; not decided yet. |
 | Client entry point — **decided (2026-11-17): an API gateway** | Clients call each service directly, or go through an API gateway | Follows from the session-check decision: the gateway is where the session check runs once. |
 
 ## 7. Authentication for every service behind a gateway
@@ -212,7 +212,7 @@ Repository `onward-gateway`, port 8081 while Account stays on 8080; clients keep
 - 401 and 403 use Account's `ApiError` JSON shape, so clients see one error contract whoever rejects them.
 - CSRF is not enforced by the gateway; it forwards cookies and headers, and Account keeps enforcing it on its cookie-backed endpoints. Verified end to end: register, verify, login, refresh (cookie), logout and `/api/auth/me` through the gateway behave as when called directly.
 
-Decided (2026-11-19): **Account keeps its own per-request database check** next to the gateway's denylist check. Behind the gateway the check is redundant, two queries per request, but it keeps Account safe when called directly and avoids moving the system-admin role out of the database for now. Revisit once the Project/Task service exists and clients actually go through the gateway, when there is something to measure. The per-client rate limit of the public auth endpoints has moved to the gateway (7.4), because behind it Account sees only the gateway's address.
+Decided (2026-11-19): **Account keeps its own per-request database check** next to the gateway's denylist check. Behind the gateway the check is redundant, two queries per request, but it keeps Account safe when called directly and avoids moving the system-admin role out of the database for now. Revisit once the Incident service exists and clients actually go through the gateway, when there is something to measure. The per-client rate limit of the public auth endpoints has moved to the gateway (7.4), because behind it Account sees only the gateway's address.
 
 ### 7.2 Denylist written by Account — implemented (2026-11-18)
 
